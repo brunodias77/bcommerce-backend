@@ -2,7 +2,7 @@ using BuildingBlocks.CQRS.Events;
 
 namespace BuildingBlocks.Core.Domain;
 
-public abstract class AggragteRoot : Entity
+public abstract class AggregateRoot : Entity
 {
     private readonly List<IDomainEvent> _domainEvents = new();
 
