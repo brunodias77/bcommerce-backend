@@ -27,6 +27,49 @@ public class OutboxEvent : Entity
         Payload = string.Empty;
         Metadata = string.Empty;
     }
+
+    public static OutboxEvent Create(
+        Guid aggregateId,
+        string aggregateType,
+        string eventType,
+        int eventVersion,
+        string payload,
+        string metadata = "{}",
+        int maxRetries = 3)
+    {
+        if (aggregateId == Guid.Empty)
+            throw new ArgumentException("AggregateId cannot be empty", nameof(aggregateId));
+
+        if (string.IsNullOrWhiteSpace(aggregateType))
+            throw new ArgumentException("AggregateType is required", nameof(aggregateType));
+
+        if (string.IsNullOrWhiteSpace(eventType))
+            throw new ArgumentException("EventType is required", nameof(eventType));
+
+        if (string.IsNullOrWhiteSpace(payload))
+            throw new ArgumentException("Payload is required", nameof(payload));
+
+        if (eventVersion < 1)
+            throw new ArgumentException("EventVersion must be positive", nameof(eventVersion));
+
+        if (maxRetries < 0)
+            throw new ArgumentException("MaxRetries cannot be negative", nameof(maxRetries));
+
+        return new OutboxEvent
+        {
+            AggregateId = aggregateId,
+            AggregateType = aggregateType,
+            EventType = eventType,
+            EventVersion = eventVersion,
+            Payload = payload,
+            Metadata = metadata,
+            Status = OutboxStatus.Pending,
+            RetryCount = 0,
+            MaxRetries = maxRetries,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+    }
     
     public override ValidationHandler Validate()
     {

@@ -12,7 +12,7 @@ public class Money
         Currency = "BRL";
     }
 
-    public Money(decimal amount, string currency = "BRL")
+    private Money(decimal amount, string currency = "BRL")
     {
         if (amount < 0)
             throw new ArgumentException("Amount cannot be negative", nameof(amount));
@@ -22,5 +22,16 @@ public class Money
 
         Amount = amount;
         Currency = currency;
+    }
+
+    public static Money Create(decimal amount, string currency = "BRL")
+    {
+        if (amount < 0)
+            throw new ArgumentException("Amount cannot be negative", nameof(amount));
+
+        if (string.IsNullOrWhiteSpace(currency))
+            throw new ArgumentException("Currency is required", nameof(currency));
+
+        return new Money(amount, currency);
     }
 }

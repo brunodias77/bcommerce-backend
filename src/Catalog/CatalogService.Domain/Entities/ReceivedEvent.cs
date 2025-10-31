@@ -18,6 +18,28 @@ public class ReceivedEvent : Entity
         SourceService = string.Empty;
         Payload = string.Empty;
     }
+
+    public static ReceivedEvent Create(string eventType, string sourceService, string payload)
+    {
+        if (string.IsNullOrWhiteSpace(eventType))
+            throw new ArgumentException("EventType is required", nameof(eventType));
+
+        if (string.IsNullOrWhiteSpace(sourceService))
+            throw new ArgumentException("SourceService is required", nameof(sourceService));
+
+        if (string.IsNullOrWhiteSpace(payload))
+            throw new ArgumentException("Payload is required", nameof(payload));
+
+        return new ReceivedEvent
+        {
+            EventType = eventType,
+            SourceService = sourceService,
+            Payload = payload,
+            Processed = false,
+            ProcessedAt = null,
+            CreatedAt = DateTime.UtcNow
+        };
+    }
     
     public override ValidationHandler Validate()
     {
