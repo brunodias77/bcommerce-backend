@@ -1,0 +1,115 @@
+# ========================================
+# BCOMMERCE BACKEND - INFRASTRUCTURE
+# ========================================
+# Docker Compose para ambiente de desenvolvimento
+# Inclui todos os bancos de dados e serviços necessários
+
+services:
+  # ========================================
+  # IDENTITY SERVICE - PostgreSQL Database
+  # ========================================
+  identity-db:
+    image: postgres:15-alpine
+    container_name: bcommerce-identity-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: identity_db
+      POSTGRES_USER: identity_user
+      POSTGRES_PASSWORD: identity_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - identity_db_data:/var/lib/postgresql/data
+    networks:
+      - bcommerce-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U identity_user -d identity_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    command: >
+      postgres
+      -c shared_preload_libraries=pg_stat_statements
+      -c pg_stat_statements.track=all
+      -c max_connections=100
+      -c shared_buffers=128MB
+      -c effective_cache_size=256MB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+
+  # ========================================
+  # CATALOG SERVICE - PostgreSQL Database
+  # ========================================
+  catalog-db:
+    image: postgres:15-alpine
+    container_name: bcommerce-catalog-db
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: catalog_db
+      POSTGRES_USER: catalog_user
+      POSTGRES_PASSWORD: catalog_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - catalog_db_data:/var/lib/postgresql/data
+      - ./init-scripts/catalog-init.sql:/docker-entrypoint-initdb.d/01-init-extensions.sql
+    networks:
+      - bcommerce-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U catalog_user -d catalog_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    command: >
+      postgres
+      -c shared_preload_libraries=pg_stat_statements,pg_trgm
+      -c pg_stat_statements.track=all
+      -c max_connections=100
+      -c shared_buffers=128MB
+      -c effective_cache_size=256MB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+
+
+
+# ========================================
+# VOLUMES - Persistência de Dados
+# ========================================
+volumes:
+  identity_db_data:
+    driver: local
+    name: bcommerce_identity_db_data
+  catalog_db_data:
+    driver: local
+    name: bcommerce_catalog_db_data
+
+# ========================================
+# NETWORKS - Rede Interna
+# ========================================
+networks:
+  bcommerce-network:
+    driver: bridge
+    name: bcommerce-network
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
