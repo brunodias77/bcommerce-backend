@@ -14,7 +14,7 @@ public class Dimensions : ValueObject
         Unit = "cm";
     }
 
-    public Dimensions(decimal length, decimal width, decimal height, string unit = "cm")
+    private Dimensions(decimal length, decimal width, decimal height, string unit = "cm")
     {
         if (length <= 0 || width <= 0 || height <= 0)
             throw new ArgumentException("Dimensions must be positive");
@@ -23,6 +23,14 @@ public class Dimensions : ValueObject
         Width = width;
         Height = height;
         Unit = unit;
+    }
+
+    public static Dimensions Create(decimal length, decimal width, decimal height, string unit = "cm")
+    {
+        if (length <= 0 || width <= 0 || height <= 0)
+            throw new ArgumentException("Dimensions must be positive");
+
+        return new Dimensions(length, width, height, unit);
     }
 
     protected override IEnumerable<object?> GetEqualityComponents()
@@ -50,10 +58,9 @@ public class Dimensions : ValueObject
             decimal.TryParse(parts[1], out var width) &&
             decimal.TryParse(parts[2], out var height))
         {
-            return new Dimensions(length, width, height);
+            return Create(length, width, height);
         }
 
         return null;
     }
-
 }

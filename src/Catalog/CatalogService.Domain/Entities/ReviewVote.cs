@@ -11,6 +11,23 @@ public class ReviewVote : Entity
     public DateTime CreatedAt { get; private set; }
     
     private ReviewVote() { }
+
+    public static ReviewVote Create(Guid reviewId, Guid userId, bool isHelpful)
+    {
+        if (reviewId == Guid.Empty)
+            throw new ArgumentException("ReviewId cannot be empty", nameof(reviewId));
+
+        if (userId == Guid.Empty)
+            throw new ArgumentException("UserId cannot be empty", nameof(userId));
+
+        return new ReviewVote
+        {
+            ReviewId = reviewId,
+            UserId = userId,
+            IsHelpful = isHelpful,
+            CreatedAt = DateTime.UtcNow
+        };
+    }
     
     public override ValidationHandler Validate()
     {

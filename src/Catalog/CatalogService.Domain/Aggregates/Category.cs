@@ -22,6 +22,39 @@ public class Category : AggregateRoot
         Slug = string.Empty;
         Metadata = string.Empty;
     }
+
+    public static Category Create(
+        string name,
+        string slug,
+        string? description = null,
+        Guid? parentId = null,
+        int displayOrder = 0,
+        bool isActive = true,
+        string metadata = "{}")
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Name is required", nameof(name));
+
+        if (string.IsNullOrWhiteSpace(slug))
+            throw new ArgumentException("Slug is required", nameof(slug));
+
+        if (displayOrder < 0)
+            throw new ArgumentException("DisplayOrder cannot be negative", nameof(displayOrder));
+
+        return new Category
+        {
+            Name = name,
+            Slug = slug,
+            Description = description,
+            ParentId = parentId,
+            IsActive = isActive,
+            DisplayOrder = displayOrder,
+            Metadata = metadata,
+            Version = 1,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+    }
     
     public override ValidationHandler Validate()
     {

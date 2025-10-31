@@ -62,6 +62,53 @@ public class Product : AggregateRoot
         Slug = string.Empty;
         Price = Money.Zero;
     }
+
+    public static Product Create(
+        string name,
+        string slug,
+        Money price,
+        int stock = 0,
+        string? description = null,
+        string? shortDescription = null,
+        Guid? categoryId = null,
+        string? sku = null,
+        bool isActive = true)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Name is required", nameof(name));
+
+        if (string.IsNullOrWhiteSpace(slug))
+            throw new ArgumentException("Slug is required", nameof(slug));
+
+        if (price == null)
+            throw new ArgumentException("Price is required", nameof(price));
+
+        if (stock < 0)
+            throw new ArgumentException("Stock cannot be negative", nameof(stock));
+
+        return new Product
+        {
+            Name = name,
+            Slug = slug,
+            Description = description,
+            ShortDescription = shortDescription,
+            Price = price,
+            Stock = stock,
+            StockReserved = 0,
+            LowStockThreshold = 10,
+            CategoryId = categoryId,
+            Sku = sku,
+            IsActive = isActive,
+            IsFeatured = false,
+            ViewCount = 0,
+            FavoriteCount = 0,
+            ReviewCount = 0,
+            ReviewAvgRating = 0,
+            Version = 1,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+    }
     
     public override ValidationHandler Validate()
     {

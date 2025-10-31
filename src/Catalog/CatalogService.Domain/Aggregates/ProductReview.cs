@@ -35,6 +35,41 @@ public class ProductReview : AggregateRoot
     {
         Rating = Rating.OneStar;
     }
+
+    public static ProductReview Create(
+        Guid productId,
+        Guid userId,
+        Rating rating,
+        string? title = null,
+        string? comment = null,
+        bool isVerifiedPurchase = false)
+    {
+        if (productId == Guid.Empty)
+            throw new ArgumentException("ProductId cannot be empty", nameof(productId));
+
+        if (userId == Guid.Empty)
+            throw new ArgumentException("UserId cannot be empty", nameof(userId));
+
+        if (rating == null)
+            throw new ArgumentException("Rating is required", nameof(rating));
+
+        return new ProductReview
+        {
+            ProductId = productId,
+            UserId = userId,
+            Rating = rating,
+            Title = title,
+            Comment = comment,
+            IsVerifiedPurchase = isVerifiedPurchase,
+            HelpfulCount = 0,
+            UnhelpfulCount = 0,
+            IsApproved = false,
+            IsFeatured = false,
+            Version = 1,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+    }
     
     public override ValidationHandler Validate()
     {
