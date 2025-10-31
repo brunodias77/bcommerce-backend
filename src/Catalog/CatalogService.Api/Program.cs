@@ -74,6 +74,12 @@ app.UseCors("AllowFrontendApps");
 // 3. HTTPS Redirection - SEMPRE PRIMEIRO para forçar HTTPS
 app.UseHttpsRedirection();
 
+// 4. Swagger - Documentação da API
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 // 5. BuildingBlocks Middlewares - segurança, validação, monitoramento
 //app.UseBuildingBlocksMiddleware(app.Environment.IsDevelopment());

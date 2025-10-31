@@ -1,3 +1,5 @@
+using CatalogService.Api.Health;
+
 namespace CatalogService.Api.Configurations;
 
 public static class ApplicationDependencyInjection
@@ -26,8 +28,8 @@ public static class ApplicationDependencyInjection
 
     private static void AddApplicationHealthChecks(this IServiceCollection services)
     {
-    //    services.AddHealthChecks()
-    //        .AddCheck<CatalogHealthCheck>("catalog");
+    services.AddHealthChecks()
+        .AddCheck<CatalogHealthCheck>("catalog");
     }
 
     private static void AddSwagger(this IServiceCollection services)

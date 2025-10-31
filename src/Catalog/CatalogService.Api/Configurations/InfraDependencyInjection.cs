@@ -36,7 +36,7 @@ public static class InfraDependencyInjection
     /// </summary>
     private static void AddInfrastructureHealthChecks(IServiceCollection services)
     {
-        services.AddHealthChecks();
+      //  services.AddHealthChecks();
     }
 
     // TODO: crie o metodo para adicionar os repositories
