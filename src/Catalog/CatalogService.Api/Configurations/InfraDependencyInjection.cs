@@ -1,4 +1,8 @@
+using BuildingBlocks.Core.Data;
+using CatalogService.Domain.Repository;
 using CatalogService.Infrastructure.Data.Context;
+using CatalogService.Infrastructure.Data.Repositories;
+using CatalogService.Infrastructure.Data.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
 
 namespace CatalogService.Api.Configurations;
@@ -28,7 +32,7 @@ public static class InfraDependencyInjection
     /// </summary>
     private static void AddUnitOfWork(IServiceCollection services)
     {
-  //    services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
     }
 
     /// <summary>
@@ -39,18 +43,25 @@ public static class InfraDependencyInjection
       //  services.AddHealthChecks();
     }
 
-    // TODO: crie o metodo para adicionar os repositories
+    /// <summary>
+    /// Configura os repositories da camada de infraestrutura
+    /// </summary>
     private static void AddRepositories(IServiceCollection services)
     {
-        // services.AddScoped<ICategoryRepository, CategoryRepository>();
-        // services.AddScoped<IFavoriteProductRepository, FavoriteProductRepository>();
-        // services.AddScoped<IInboxEventRepository, InboxEventRepository>();
-        // services.AddScoped<IOutboxEventRepository, OutboxEventRepository>();
-        // services.AddScoped<IProductImageRepository, ProductImageRepository>();
-        // services.AddScoped<IProductRepository, ProductRepository>();
-        // services.AddScoped<IProductReviewRepository, ProductReviewRepository>();
-        // services.AddScoped<IReceivedEventRepository, ReceivedEventRepository>();
-        // services.AddScoped<IReviewVoteRepository, ReviewVoteRepository>();
+        // Repositories para Aggregates
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<IProductReviewRepository, ProductReviewRepository>();
+        
+        // Repositories para Entities
+        services.AddScoped<IProductImageRepository, ProductImageRepository>();
+        services.AddScoped<IFavoriteProductRepository, FavoriteProductRepository>();
+        services.AddScoped<IReviewVoteRepository, ReviewVoteRepository>();
+        
+        // Repositories para Events
+        services.AddScoped<IOutboxEventRepository, OutboxEventRepository>();
+        services.AddScoped<IInboxEventRepository, InboxEventRepository>();
+        services.AddScoped<IReceivedEventRepository, ReceivedEventRepository>();
     }
     
     /// <summary>
