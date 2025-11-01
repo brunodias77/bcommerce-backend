@@ -1,9 +1,10 @@
 using BuildingBlocks.Core.Validations;
+using BuildingBlocks.CQRS.Validations;
 using System.Text.RegularExpressions;
 
 namespace CatalogService.Application.Commands.Products.CreateProduct;
 
-public class CreateProductCommandValidator
+public class CreateProductCommandValidator : IValidator<CreateProductCommand>
 {
     public ValidationHandler Validate(CreateProductCommand command)
     {

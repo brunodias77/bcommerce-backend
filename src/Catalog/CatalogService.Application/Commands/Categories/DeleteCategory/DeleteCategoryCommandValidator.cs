@@ -1,11 +1,12 @@
 using BuildingBlocks.Core.Validations;
+using BuildingBlocks.CQRS.Validations;
 
 namespace CatalogService.Application.Commands.Categories.DeleteCategory;
 
 /// <summary>
 /// Validador para o comando de deletar categoria
 /// </summary>
-public class DeleteCategoryCommandValidator
+public class DeleteCategoryCommandValidator : IValidator<DeleteCategoryCommand>
 {
     /// <summary>
     /// Valida o comando de deletar categoria

@@ -1,4 +1,5 @@
 using BuildingBlocks.CQRS.Mediator;
+using BuildingBlocks.CQRS.Validations;
 using CatalogService.Api.Health;
 using CatalogService.Application.Commands.Categories.CreateCategory;
 using CatalogService.Application.Commands.Categories.DeleteCategory;
@@ -19,16 +20,20 @@ public static class ApplicationDependencyInjection
 
     private static void AddMediator(this IServiceCollection services, IConfiguration configuration)
     {
+        // Registrar Mediator com assembly da Application
         services.AddMediator(typeof(CreateCategoryCommandHandler).Assembly);
+        
+        // Registrar ValidationBehavior manualmente
+        services.AddScoped(typeof(BuildingBlocks.CQRS.Mediator.IPipelineBehavior<,>), typeof(BuildingBlocks.CQRS.Behaviors.ValidationBehavior<,>));
     }
 
 
     private static void AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // Validators
-        services.AddScoped<CreateCategoryCommandValidator>();
-        services.AddScoped<DeleteCategoryCommandValidator>();
-        services.AddScoped<CreateProductCommandValidator>();
+        // Validators - registrar como IValidator<T> para o ValidationBehavior
+        services.AddScoped<IValidator<CreateCategoryCommand>, CreateCategoryCommandValidator>();
+        services.AddScoped<IValidator<DeleteCategoryCommand>, DeleteCategoryCommandValidator>();
+        services.AddScoped<IValidator<CreateProductCommand>, CreateProductCommandValidator>();
         
         // services.AddScoped<ILoggedUser, LoggedUser>();
         // services.AddHttpContextAccessor();
