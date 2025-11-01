@@ -51,6 +51,36 @@ public class Category : AggregateRoot
 
     }
 
+    /// <summary>
+    /// Atualiza os dados da categoria
+    /// </summary>
+    /// <param name="name">Nome da categoria</param>
+    /// <param name="slug">Slug da categoria</param>
+    /// <param name="description">Descrição da categoria</param>
+    /// <param name="parentId">ID da categoria pai</param>
+    /// <param name="displayOrder">Ordem de exibição</param>
+    /// <param name="isActive">Se a categoria está ativa</param>
+    /// <param name="metadata">Metadados em JSON</param>
+    public void Update(
+        string name,
+        string slug,
+        string? description = null,
+        Guid? parentId = null,
+        int displayOrder = 0,
+        bool isActive = true,
+        string metadata = "{}")
+    {
+        Name = name;
+        Slug = slug;
+        Description = description;
+        ParentId = parentId;
+        DisplayOrder = displayOrder;
+        IsActive = isActive;
+        Metadata = metadata;
+        Version++;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public override ValidationHandler Validate(ValidationHandler handler)
     {
         // Validar Name (movido do Create para cá)
@@ -102,5 +132,18 @@ public class Category : AggregateRoot
         {
             return false;
         }
+    }
+
+    /// <summary>
+    /// Realiza o soft delete da categoria
+    /// </summary>
+    /// <returns>Categoria com soft delete aplicado</returns>
+    public Category SoftDelete()
+    {
+        IsActive = false;
+        UpdatedAt = DateTime.UtcNow;
+        Version++;
+        
+        return this;
     }
 }

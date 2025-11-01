@@ -1,6 +1,7 @@
 using BuildingBlocks.CQRS.Mediator;
 using CatalogService.Api.Health;
 using CatalogService.Application.Commands.Categories.CreateCategory;
+using CatalogService.Application.Commands.Categories.DeleteCategory;
 using CatalogService.Application.Commands.Products.CreateProduct;
 
 namespace CatalogService.Api.Configurations;
@@ -26,6 +27,7 @@ public static class ApplicationDependencyInjection
     {
         // Validators
         services.AddScoped<CreateCategoryCommandValidator>();
+        services.AddScoped<DeleteCategoryCommandValidator>();
         services.AddScoped<CreateProductCommandValidator>();
         
         // services.AddScoped<ILoggedUser, LoggedUser>();
