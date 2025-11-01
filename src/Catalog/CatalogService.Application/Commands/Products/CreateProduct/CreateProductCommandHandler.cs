@@ -1,5 +1,6 @@
 using System.Linq;
 using BuildingBlocks.Core.Data;
+using BuildingBlocks.Core.Exceptions;
 using BuildingBlocks.Core.Responses;
 using BuildingBlocks.Core.Validations;
 using BuildingBlocks.CQRS.Commands;
@@ -31,7 +32,14 @@ public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand,
         var validationResult = _validator.Validate(request);
         if (validationResult.HasErrors)
         {
-            return ApiResponse<CreateProductResponse>.Fail(validationResult.Errors.ToList());
+            throw new ValidationException(validationResult.Errors.ToList());
+        }
+
+        // Validar se já existe produto com o mesmo slug
+        var existingProducts = await _productRepository.FindAsync(p => p.Slug == request.Slug, cancellationToken);
+        if (existingProducts.Any())
+        {
+            throw new DomainException("Já existe um produto com este slug.");
         }
 
         // 2. Iniciar transação explícita
@@ -39,14 +47,6 @@ public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand,
         
         try
         {
-            // Validar se já existe produto com o mesmo slug
-            var existingProducts = await _productRepository.FindAsync(p => p.Slug == request.Slug, cancellationToken);
-            if (existingProducts.Any())
-            {
-                await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-                validationResult.Add("Já existe um produto com este slug.");
-                return ApiResponse<CreateProductResponse>.Fail(validationResult.Errors.ToList());
-            }
 
             // Criar o objeto Money para o preço
             var price = Money.Create(request.Price, request.Currency);
@@ -134,17 +134,10 @@ public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand,
 
             return ApiResponse<CreateProductResponse>.Ok(response, "Produto criado com sucesso.");
         }
-        catch (ArgumentException ex)
+        catch
         {
             await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-            validationResult.Add(ex.Message);
-            return ApiResponse<CreateProductResponse>.Fail(validationResult.Errors.ToList());
-        }
-        catch (Exception ex)
-        {
-            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-            validationResult.Add($"Erro interno do servidor: {ex.Message}");
-            return ApiResponse<CreateProductResponse>.Fail(validationResult.Errors.ToList());
+            throw; // Re-lançar a exceção para o GlobalExceptionHandler
         }
     }
 }
