@@ -44,14 +44,6 @@ public class ProductReview : AggregateRoot
         string? comment = null,
         bool isVerifiedPurchase = false)
     {
-        if (productId == Guid.Empty)
-            throw new ArgumentException("ProductId cannot be empty", nameof(productId));
-
-        if (userId == Guid.Empty)
-            throw new ArgumentException("UserId cannot be empty", nameof(userId));
-
-        if (rating == null)
-            throw new ArgumentException("Rating is required", nameof(rating));
 
         return new ProductReview
         {
@@ -69,10 +61,57 @@ public class ProductReview : AggregateRoot
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
+
+
     }
     
-    public override ValidationHandler Validate()
+    public override ValidationHandler Validate(ValidationHandler handler)
     {
-        throw new NotImplementedException();
+        // Validar ProductId
+        if (ProductId == Guid.Empty)
+            handler.Add("ID do produto é obrigatório");
+        
+        // Validar UserId
+        if (UserId == Guid.Empty)
+            handler.Add("ID do usuário é obrigatório");
+        
+        // Validar Rating
+        if (Rating == null)
+            handler.Add("Avaliação é obrigatória");
+        
+        // Validar Title (opcional)
+        if (!string.IsNullOrEmpty(Title))
+        {
+            if (string.IsNullOrWhiteSpace(Title))
+                handler.Add("Título não pode conter apenas espaços em branco");
+            else if (Title.Length > 100)
+                handler.Add("Título deve ter no máximo 100 caracteres");
+        }
+        
+        // Validar Comment (opcional)
+        if (!string.IsNullOrEmpty(Comment))
+        {
+            if (string.IsNullOrWhiteSpace(Comment))
+                handler.Add("Comentário não pode conter apenas espaços em branco");
+            else if (Comment.Length > 2000)
+                handler.Add("Comentário deve ter no máximo 2000 caracteres");
+        }
+        
+        // Validar HelpfulCount
+        if (HelpfulCount < 0)
+            handler.Add("Contagem de avaliações úteis deve ser maior ou igual a zero");
+        
+        // Validar UnhelpfulCount
+        if (UnhelpfulCount < 0)
+            handler.Add("Contagem de avaliações não úteis deve ser maior ou igual a zero");
+        
+        // Validar regras de moderação
+        if (ModeratedAt.HasValue && (!ModeratedBy.HasValue || ModeratedBy.Value == Guid.Empty))
+            handler.Add("Quando a avaliação foi moderada, deve ser informado quem a moderou");
+        
+        if (!ModeratedAt.HasValue && ModeratedBy.HasValue)
+            handler.Add("Não é possível ter um moderador sem data de moderação");
+        
+        return handler;
     }
 }

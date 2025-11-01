@@ -15,7 +15,7 @@ public abstract class Entity
         Id = id;
     }
     
-    public abstract ValidationHandler Validate();
+    public abstract ValidationHandler Validate(ValidationHandler handler);
     
     public bool Equals(Entity? other)
     {

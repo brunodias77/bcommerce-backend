@@ -1,3 +1,8 @@
+using BuildingBlocks.CQRS.Mediator;
+using CatalogService.Api.Health;
+using CatalogService.Application.Commands.Categories.CreateCategory;
+using CatalogService.Application.Commands.Products.CreateProduct;
+
 namespace CatalogService.Api.Configurations;
 
 public static class ApplicationDependencyInjection
@@ -13,12 +18,16 @@ public static class ApplicationDependencyInjection
 
     private static void AddMediator(this IServiceCollection services, IConfiguration configuration)
     {
-     //   services.AddMediator(typeof(CreateProductCommandHandler).Assembly);
+        services.AddMediator(typeof(CreateCategoryCommandHandler).Assembly);
     }
 
 
     private static void AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
     {
+        // Validators
+        services.AddScoped<CreateCategoryCommandValidator>();
+        services.AddScoped<CreateProductCommandValidator>();
+        
         // services.AddScoped<ILoggedUser, LoggedUser>();
         // services.AddHttpContextAccessor();
         // services.AddMemoryCache();
@@ -26,8 +35,8 @@ public static class ApplicationDependencyInjection
 
     private static void AddApplicationHealthChecks(this IServiceCollection services)
     {
-    //    services.AddHealthChecks()
-    //        .AddCheck<CatalogHealthCheck>("catalog");
+    services.AddHealthChecks()
+        .AddCheck<CatalogHealthCheck>("catalog");
     }
 
     private static void AddSwagger(this IServiceCollection services)

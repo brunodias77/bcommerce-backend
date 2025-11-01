@@ -25,10 +25,26 @@ public class FavoriteProduct : Entity
             ProductId = productId,
             CreatedAt = DateTime.UtcNow
         };
+
+       
     }
 
-    public override ValidationHandler Validate()
+    public override ValidationHandler Validate(ValidationHandler handler)
     {
-        throw new NotImplementedException();
+        // Validar UserId
+        if (UserId == Guid.Empty)
+            handler.Add("ID do usuário é obrigatório");
+        
+        // Validar ProductId
+        if (ProductId == Guid.Empty)
+            handler.Add("ID do produto é obrigatório");
+        
+        // Validar CreatedAt
+        if (CreatedAt == default(DateTime))
+            handler.Add("Data de criação é obrigatória");
+        else if (CreatedAt > DateTime.UtcNow.AddMinutes(1)) // Pequena tolerância para diferenças de clock
+            handler.Add("Data de criação não pode ser no futuro");
+        
+        return handler;
     }
 }

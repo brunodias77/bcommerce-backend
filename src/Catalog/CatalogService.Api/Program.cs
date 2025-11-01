@@ -1,6 +1,8 @@
 
 
 using CatalogService.Api.Configurations;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,9 +10,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Configurar Serilog
 builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration));
-    
-    
-    
+
+
+
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -27,7 +29,7 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod()
             .AllowCredentials();
     });
-});    
+});
 
 
 
@@ -74,6 +76,12 @@ app.UseCors("AllowFrontendApps");
 // 3. HTTPS Redirection - SEMPRE PRIMEIRO para forçar HTTPS
 app.UseHttpsRedirection();
 
+// 4. Swagger - Documentação da API
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 // 5. BuildingBlocks Middlewares - segurança, validação, monitoramento
 //app.UseBuildingBlocksMiddleware(app.Environment.IsDevelopment());
@@ -86,6 +94,26 @@ app.MapControllers();
 
 
 logger.LogInformation("🎯 Catalog Service configurado e pronto para receber requisições!");
+
+// Configurar evento para logar as URLs reais após a aplicação iniciar
+var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
+lifetime.ApplicationStarted.Register(() =>
+{
+    var server = app.Services.GetRequiredService<IServer>();
+    var addressFeature = server.Features.Get<IServerAddressesFeature>();
+    
+    if (addressFeature?.Addresses?.Any() == true)
+    {
+        foreach (var address in addressFeature.Addresses)
+        {
+            logger.LogInformation("🌐 Catalog API rodando em: {Url}", address);
+        }
+    }
+    else
+    {
+        logger.LogInformation("🌐 Catalog API iniciada (endereços não disponíveis)");
+    }
+});
 
 try
 {

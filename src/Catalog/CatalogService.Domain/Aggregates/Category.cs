@@ -1,5 +1,7 @@
 using BuildingBlocks.Core.Domain;
 using BuildingBlocks.Core.Validations;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace CatalogService.Domain.Aggregates;
 
@@ -15,8 +17,8 @@ public class Category : AggregateRoot
     public int Version { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
-    
-    private Category() 
+
+    private Category()
     {
         Name = string.Empty;
         Slug = string.Empty;
@@ -32,15 +34,7 @@ public class Category : AggregateRoot
         bool isActive = true,
         string metadata = "{}")
     {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Name is required", nameof(name));
-
-        if (string.IsNullOrWhiteSpace(slug))
-            throw new ArgumentException("Slug is required", nameof(slug));
-
-        if (displayOrder < 0)
-            throw new ArgumentException("DisplayOrder cannot be negative", nameof(displayOrder));
-
+        // 1. Apenas criamos a instância com os dados recebidos.
         return new Category
         {
             Name = name,
@@ -54,10 +48,59 @@ public class Category : AggregateRoot
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
+
     }
-    
-    public override ValidationHandler Validate()
+
+    public override ValidationHandler Validate(ValidationHandler handler)
     {
-        throw new NotImplementedException();
+        // Validar Name (movido do Create para cá)
+        if (string.IsNullOrWhiteSpace(Name))
+            handler.Add("Nome da categoria é obrigatório");
+        else if (Name.Length > 200)
+            handler.Add("Nome da categoria deve ter no máximo 200 caracteres");
+
+        // Validar Slug (movido do Create para cá)
+        if (string.IsNullOrWhiteSpace(Slug))
+            handler.Add("Slug da categoria é obrigatório");
+        else if (Slug.Length > 200)
+            handler.Add("Slug da categoria deve ter no máximo 200 caracteres");
+        else if (!IsValidSlug(Slug))
+            handler.Add("Slug deve conter apenas letras minúsculas, números e hífens, sem espaços ou caracteres especiais");
+
+        // Validar Description
+        if (!string.IsNullOrEmpty(Description) && Description.Length > 1000)
+            handler.Add("Descrição da categoria deve ter no máximo 1000 caracteres");
+
+        // Validar DisplayOrder (movido do Create para cá)
+        if (DisplayOrder < 0)
+            handler.Add("Ordem de exibição deve ser maior ou igual a zero");
+
+        // Validar Metadata
+        if (string.IsNullOrWhiteSpace(Metadata))
+            handler.Add("Metadata da categoria é obrigatório"); // Geralmente é opcional, mas mantendo sua regra.
+        else if (!IsValidJson(Metadata))
+            handler.Add("Metadata deve ser um JSON válido");
+
+        return handler;
+    }
+    private static bool IsValidSlug(string slug)
+    {
+        // Slug deve conter apenas letras minúsculas, números e hífens
+        // Não pode começar ou terminar com hífen
+        var slugPattern = @"^[a-z0-9]+(?:-[a-z0-9]+)*$";
+        return Regex.IsMatch(slug, slugPattern);
+    }
+
+    private static bool IsValidJson(string json)
+    {
+        try
+        {
+            JsonDocument.Parse(json);
+            return true;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 }
