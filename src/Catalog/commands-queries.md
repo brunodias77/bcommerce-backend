@@ -1,781 +1,791 @@
-# Catalog Service - CQRS Commands & Queries
+# 📋 Commands & Queries - Catalog Service
 
-## Índice
-- [Commands (Write Operations)](#commands-write-operations)
-- [Queries (Read Operations)](#queries-read-operations)
-- [Event Sourcing](#event-sourcing)
+Este documento define todos os **Commands** (operações de escrita) e **Queries** (operações de leitura) que devemos implementar no serviço de Catálogo do projeto BCommerce.
 
----
+## 📊 Status Geral
 
-## Commands (Write Operations)
-
-### 📦 Product Commands
-
-#### 1. CreateProductCommand
-```typescript
-{
-  name: string;
-  slug: string;
-  description: string;
-  shortDescription: string;
-  price: number;
-  compareAtPrice?: number;
-  costPrice?: number;
-  categoryId: UUID;
-  sku: string;
-  barcode?: string;
-  weight?: number;
-  dimensions?: string;
-  images: Array<{ url: string; altText?: string }>;
-}
-```
-**Implementação:**
-- Valida unicidade de `slug` e `sku`
-- Insere registro na tabela `products`
-- Insere imagens relacionadas em `product_images`
-- Trigger `publish_product_created` dispara evento `ProductCreated` no outbox
-- Retorna UUID do produto criado
+- ✅ **Implementado**
+- 🚧 **Em Desenvolvimento**
+- ⏳ **Pendente**
+- 🔄 **Refatoração Necessária**
 
 ---
 
-#### 2. UpdateProductCommand
-```typescript
-{
-  productId: UUID;
-  name?: string;
-  slug?: string;
-  description?: string;
-  price?: number;
-  categoryId?: UUID;
-  isActive?: boolean;
-  isFeatured?: boolean;
-  version: number; // Optimistic locking
-}
-```
-**Implementação:**
-- Verifica `version` para evitar conflitos (optimistic locking)
-- Atualiza apenas campos fornecidos
-- Trigger `update_products_version` incrementa versão automaticamente
-- Trigger `publish_product_updated` detecta tipo de mudança (preço, estoque, etc.)
-- Publica evento específico (`ProductPriceChanged`, `ProductStockChanged` ou `ProductUpdated`)
+## 🔧 COMMANDS (Write Operations)
+
+### 📂 Categories
+
+#### ✅ CreateCategory
+**Status**: Implementado  
+**Descrição**: Cria uma nova categoria no catálogo  
+**Parâmetros**:
+- `Name` (string, obrigatório): Nome da categoria
+- `Slug` (string, obrigatório): URL amigável única
+- `Description` (string, opcional): Descrição da categoria
+- `ParentId` (Guid?, opcional): ID da categoria pai
+- `DisplayOrder` (int): Ordem de exibição (padrão: 0)
+- `IsActive` (bool): Status ativo (padrão: true)
+- `Metadata` (string): JSON com metadados (padrão: "{}")
+
+**Resposta**: `ApiResponse<CreateCategoryResponse>`  
+**Validações**:
+- Nome obrigatório (máx. 200 caracteres)
+- Slug único e válido (formato: a-z, 0-9, hífens)
+- Descrição opcional (máx. 1000 caracteres)
+- Metadata deve ser JSON válido
 
 ---
 
-#### 3. UpdateProductPriceCommand
-```typescript
-{
-  productId: UUID;
-  newPrice: number;
-  compareAtPrice?: number;
-  reason?: string;
-}
-```
-**Implementação:**
-- Command especializado para mudanças de preço
-- Registra preço anterior para auditoria
-- Publica evento `ProductPriceChanged` com old/new price
-- Pode integrar com serviço de pricing/promotions
+#### ⏳ UpdateCategory
+**Status**: Pendente  
+**Descrição**: Atualiza informações de uma categoria existente  
+**Parâmetros**:
+- `Id` (Guid, obrigatório): ID da categoria
+- `Name` (string, obrigatório): Nome da categoria
+- `Slug` (string, obrigatório): URL amigável única
+- `Description` (string, opcional): Descrição da categoria
+- `ParentId` (Guid?, opcional): ID da categoria pai
+- `DisplayOrder` (int): Ordem de exibição
+- `Metadata` (string): JSON com metadados
+
+**Resposta**: `ApiResponse<UpdateCategoryResponse>`  
+**Validações**:
+- Categoria deve existir
+- Slug único (exceto para a própria categoria)
+- Não pode ser pai de si mesma
+- Não pode criar ciclos na hierarquia
 
 ---
 
-#### 4. ReserveStockCommand
-```typescript
-{
-  productId: UUID;
-  quantity: number;
-  orderId: UUID;
-}
-```
-**Implementação:**
-- Verifica disponibilidade (`stock - stock_reserved >= quantity`)
-- Incrementa `stock_reserved`
-- Publica evento `StockReserved` com detalhes da reserva
-- Usado pelo Order Service durante criação de pedido
-- Implementa idempotência usando `orderId` no inbox
+#### ⏳ DeleteCategory
+**Status**: Pendente  
+**Descrição**: Remove uma categoria (soft delete)  
+**Parâmetros**:
+- `Id` (Guid, obrigatório): ID da categoria
+
+**Resposta**: `ApiResponse<bool>`  
+**Validações**:
+- Categoria deve existir
+- Não pode ter produtos associados
+- Não pode ter subcategorias ativas
 
 ---
 
-#### 5. ReleaseStockCommand
-```typescript
-{
-  productId: UUID;
-  quantity: number;
-  orderId: UUID;
-  reason: 'CANCELLED' | 'EXPIRED' | 'REJECTED';
-}
-```
-**Implementação:**
-- Decrementa `stock_reserved`
-- Publica evento `StockReleased`
-- Chamado quando pedido é cancelado ou carrinho expira
+#### ⏳ ActivateCategory
+**Status**: Pendente  
+**Descrição**: Ativa uma categoria desativada  
+**Parâmetros**:
+- `Id` (Guid, obrigatório): ID da categoria
+
+**Resposta**: `ApiResponse<bool>`  
+**Validações**:
+- Categoria deve existir
+- Categoria deve estar inativa
 
 ---
 
-#### 6. CommitStockCommand
-```typescript
-{
-  productId: UUID;
-  quantity: number;
-  orderId: UUID;
-}
-```
-**Implementação:**
-- Decrementa ambos `stock` e `stock_reserved`
-- Publica evento `StockCommitted`
-- Executado quando pedido é confirmado/pago
+#### ⏳ DeactivateCategory
+**Status**: Pendente  
+**Descrição**: Desativa uma categoria ativa  
+**Parâmetros**:
+- `Id` (Guid, obrigatório): ID da categoria
+
+**Resposta**: `ApiResponse<bool>`  
+**Validações**:
+- Categoria deve existir
+- Categoria deve estar ativa
 
 ---
 
-#### 7. AdjustStockCommand
-```typescript
-{
-  productId: UUID;
-  adjustment: number; // Pode ser negativo
-  reason: string;
-  adjustedBy: UUID;
-}
-```
-**Implementação:**
-- Ajuste manual de estoque (recebimento, inventário, perdas)
-- Registra no outbox para auditoria
-- Atualiza `stock` diretamente
+### 🛍️ Products
+
+#### ✅ CreateProduct
+**Status**: Implementado  
+**Descrição**: Cria um novo produto no catálogo  
+**Parâmetros**:
+- `Name` (string, obrigatório): Nome do produto
+- `Slug` (string, obrigatório): URL amigável única
+- `Description` (string, opcional): Descrição completa
+- `ShortDescription` (string, opcional): Descrição resumida
+- `Price` (decimal, obrigatório): Preço do produto
+- `Currency` (string): Moeda (padrão: "BRL")
+- `CompareAtPrice` (decimal?, opcional): Preço de comparação
+- `CostPrice` (decimal?, opcional): Preço de custo
+- `Stock` (int): Quantidade em estoque
+- `LowStockThreshold` (int): Limite de estoque baixo
+- `CategoryId` (Guid?, opcional): ID da categoria
+- `MetaTitle` (string, opcional): Título SEO
+- `MetaDescription` (string, opcional): Descrição SEO
+- `WeightKg` (decimal?, opcional): Peso em kg
+- `Sku` (string, opcional): Código SKU
+- `Barcode` (string, opcional): Código de barras
+- `IsActive` (bool): Status ativo
+- `IsFeatured` (bool): Produto em destaque
+
+**Resposta**: `ApiResponse<CreateProductResponse>`  
+**Validações**:
+- Nome obrigatório (máx. 200 caracteres)
+- Slug único e válido
+- Preço maior que zero
+- Estoque não negativo
 
 ---
 
-#### 8. SoftDeleteProductCommand
-```typescript
-{
-  productId: UUID;
-  deletedBy: UUID;
-}
-```
-**Implementação:**
-- Define `deleted_at = now()`
-- Produto não aparece mais nas queries (índices com `WHERE deleted_at IS NULL`)
-- Mantém histórico para referências de pedidos antigos
-- Publica evento `ProductDeleted`
+#### ⏳ UpdateProduct
+**Status**: Pendente  
+**Descrição**: Atualiza informações de um produto existente  
+**Parâmetros**: Similares ao CreateProduct + `Id`  
+**Resposta**: `ApiResponse<UpdateProductResponse>`  
+**Validações**: Similares ao CreateProduct + produto deve existir
 
 ---
 
-### 📁 Category Commands
+#### ⏳ DeleteProduct
+**Status**: Pendente  
+**Descrição**: Remove um produto (soft delete)  
+**Parâmetros**:
+- `Id` (Guid, obrigatório): ID do produto
 
-#### 9. CreateCategoryCommand
-```typescript
-{
-  name: string;
-  slug: string;
-  description?: string;
-  parentId?: UUID;
-  displayOrder?: number;
-}
-```
-**Implementação:**
-- Valida unicidade de `slug`
-- Verifica existência de `parentId` se fornecido
-- Insere registro em `categories`
+**Resposta**: `ApiResponse<bool>`  
+**Validações**:
+- Produto deve existir
+- Não pode ter pedidos pendentes
 
 ---
 
-#### 10. UpdateCategoryCommand
-```typescript
-{
-  categoryId: UUID;
-  name?: string;
-  isActive?: boolean;
-  displayOrder?: number;
-}
-```
-**Implementação:**
-- Atualização parcial de categoria
-- Pode desativar categoria (afeta exibição de produtos)
+#### ⏳ ActivateProduct
+**Status**: Pendente  
+**Descrição**: Ativa um produto desativado  
+**Parâmetros**:
+- `Id` (Guid, obrigatório): ID do produto
+
+**Resposta**: `ApiResponse<bool>`
 
 ---
 
-### ⭐ Favorite Commands
+#### ⏳ DeactivateProduct
+**Status**: Pendente  
+**Descrição**: Desativa um produto ativo  
+**Parâmetros**:
+- `Id` (Guid, obrigatório): ID do produto
 
-#### 11. AddToFavoritesCommand
-```typescript
-{
-  userId: UUID;
-  productId: UUID;
-}
-```
-**Implementação:**
-- Insere em `favorite_products` (constraint UNIQUE evita duplicatas)
-- Trigger `update_favorite_count_on_insert` incrementa contador no produto
-- Operação idempotente (ON CONFLICT DO NOTHING)
+**Resposta**: `ApiResponse<bool>`
 
 ---
 
-#### 12. RemoveFromFavoritesCommand
-```typescript
-{
-  userId: UUID;
-  productId: UUID;
-}
-```
-**Implementação:**
-- Remove de `favorite_products`
-- Trigger `update_favorite_count_on_delete` decrementa contador
+#### ⏳ UpdateProductStock
+**Status**: Pendente  
+**Descrição**: Atualiza o estoque de um produto  
+**Parâmetros**:
+- `Id` (Guid, obrigatório): ID do produto
+- `Stock` (int, obrigatório): Nova quantidade
+- `Operation` (enum): ADD, SUBTRACT, SET
+
+**Resposta**: `ApiResponse<ProductStockResponse>`
 
 ---
 
-### ⭐ Review Commands
+#### ⏳ UpdateProductPrice
+**Status**: Pendente  
+**Descrição**: Atualiza o preço de um produto  
+**Parâmetros**:
+- `Id` (Guid, obrigatório): ID do produto
+- `Price` (decimal, obrigatório): Novo preço
+- `CompareAtPrice` (decimal?, opcional): Preço de comparação
 
-#### 13. CreateReviewCommand
-```typescript
-{
-  productId: UUID;
-  userId: UUID;
-  rating: number; // 1-5
-  title: string;
-  comment: string;
-  isVerifiedPurchase: boolean;
-}
-```
-**Implementação:**
-- Valida rating entre 1-5
-- Define `is_approved = false` (requer moderação)
-- Trigger atualiza estatísticas do produto apenas quando aprovada
-- Pode verificar compra através de evento `OrderCompleted` no inbox
+**Resposta**: `ApiResponse<ProductPriceResponse>`
 
 ---
 
-#### 14. ApproveReviewCommand
-```typescript
-{
-  reviewId: UUID;
-  moderatorId: UUID;
-}
-```
-**Implementação:**
-- Define `is_approved = true`
-- Registra `moderated_by` e `moderated_at`
-- Trigger `update_review_stats_on_update` recalcula média e contador
+#### ⏳ FeatureProduct
+**Status**: Pendente  
+**Descrição**: Marca um produto como destaque  
+**Parâmetros**:
+- `Id` (Guid, obrigatório): ID do produto
+
+**Resposta**: `ApiResponse<bool>`
 
 ---
 
-#### 15. RejectReviewCommand
-```typescript
-{
-  reviewId: UUID;
-  moderatorId: UUID;
-  reason: string;
-}
-```
-**Implementação:**
-- Soft delete da review (`deleted_at = now()`)
-- Registra razão da rejeição no metadata
+#### ⏳ UnfeatureProduct
+**Status**: Pendente  
+**Descrição**: Remove um produto dos destaques  
+**Parâmetros**:
+- `Id` (Guid, obrigatório): ID do produto
+
+**Resposta**: `ApiResponse<bool>`
 
 ---
 
-#### 16. VoteReviewCommand
-```typescript
-{
-  reviewId: UUID;
-  userId: UUID;
-  isHelpful: boolean;
-}
-```
-**Implementação:**
-- Insere em `review_votes` (constraint UNIQUE evita duplicatas)
-- Incrementa `helpful_count` ou `unhelpful_count` na review
-- Idempotente usando UPSERT
+### 🖼️ Product Images
+
+#### ⏳ AddProductImage
+**Status**: Pendente  
+**Descrição**: Adiciona uma imagem a um produto  
+**Parâmetros**:
+- `ProductId` (Guid, obrigatório): ID do produto
+- `Url` (string, obrigatório): URL da imagem
+- `ThumbnailUrl` (string, opcional): URL da miniatura
+- `AltText` (string, opcional): Texto alternativo
+- `DisplayOrder` (int): Ordem de exibição
+- `IsPrimary` (bool): Imagem principal
+
+**Resposta**: `ApiResponse<ProductImageResponse>`
 
 ---
 
-### 🖼️ Image Commands
-
-#### 17. AddProductImagesCommand
-```typescript
-{
-  productId: UUID;
-  images: Array<{
-    url: string;
-    thumbnailUrl?: string;
-    altText?: string;
-    displayOrder?: number;
-    isPrimary?: boolean;
-  }>;
-}
-```
-**Implementação:**
-- Insere múltiplas imagens em `product_images`
-- Se `isPrimary = true`, desmarca outras imagens como primárias
-- Atualiza `display_order` automaticamente
+#### ⏳ UpdateProductImage
+**Status**: Pendente  
+**Descrição**: Atualiza informações de uma imagem  
+**Parâmetros**: Similares ao AddProductImage + `Id`  
+**Resposta**: `ApiResponse<ProductImageResponse>`
 
 ---
 
-#### 18. SetPrimaryImageCommand
-```typescript
-{
-  productId: UUID;
-  imageId: UUID;
-}
-```
-**Implementação:**
-- Desmarca todas imagens do produto como primárias
-- Marca a imagem especificada como `is_primary = true`
+#### ⏳ DeleteProductImage
+**Status**: Pendente  
+**Descrição**: Remove uma imagem do produto  
+**Parâmetros**:
+- `Id` (Guid, obrigatório): ID da imagem
+
+**Resposta**: `ApiResponse<bool>`
 
 ---
 
-## Queries (Read Operations)
+#### ⏳ SetPrimaryProductImage
+**Status**: Pendente  
+**Descrição**: Define uma imagem como principal  
+**Parâmetros**:
+- `ProductId` (Guid, obrigatório): ID do produto
+- `ImageId` (Guid, obrigatório): ID da imagem
 
-### 🔍 Product Queries
-
-#### 1. GetProductByIdQuery
-```typescript
-{
-  productId: UUID;
-  includeInactive?: boolean;
-}
-```
-**Implementação:**
-- Usa view `product_catalog` para dados agregados
-- Retorna produto com categoria, imagens e estatísticas
-- Filtra `deleted_at IS NULL` por padrão
-
-**Response:**
-```typescript
-{
-  id: UUID;
-  name: string;
-  slug: string;
-  description: string;
-  price: number;
-  stock: number;
-  category: { id, name, slug };
-  images: Array<{ url, thumbnailUrl, altText }>;
-  reviewCount: number;
-  reviewAvgRating: number;
-  favoriteCount: number;
-}
-```
+**Resposta**: `ApiResponse<bool>`
 
 ---
 
-#### 2. GetProductBySlugQuery
-```typescript
-{
-  slug: string;
-}
-```
-**Implementação:**
-- Similar ao `GetProductById` mas busca por slug
-- Usa índice `idx_products_slug` para performance
-- Incrementa `view_count` (pode ser async via evento)
+#### ⏳ ReorderProductImages
+**Status**: Pendente  
+**Descrição**: Reordena as imagens de um produto  
+**Parâmetros**:
+- `ProductId` (Guid, obrigatório): ID do produto
+- `ImageOrders` (List<ImageOrder>): Lista com ID e nova ordem
+
+**Resposta**: `ApiResponse<bool>`
 
 ---
 
-#### 3. SearchProductsQuery
-```typescript
-{
-  searchTerm?: string;
-  categoryId?: UUID;
-  minPrice?: number;
-  maxPrice?: number;
-  inStock?: boolean;
-  isFeatured?: boolean;
-  sortBy?: 'price' | 'name' | 'rating' | 'newest';
-  sortOrder?: 'asc' | 'desc';
-  page?: number;
-  pageSize?: number;
-}
-```
-**Implementação:**
-- Query complexa com múltiplos filtros opcionais
-- Usa `pg_trgm` para full-text search em nome/descrição
-- Aplica índices específicos para cada filtro
-- Paginação usando LIMIT/OFFSET
-- Retorna total de resultados para navegação
+### ⭐ Product Reviews
 
-**Response:**
-```typescript
-{
-  items: Product[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
-```
+#### ⏳ CreateProductReview
+**Status**: Pendente  
+**Descrição**: Cria uma avaliação para um produto  
+**Parâmetros**:
+- `ProductId` (Guid, obrigatório): ID do produto
+- `UserId` (Guid, obrigatório): ID do usuário
+- `Rating` (int, obrigatório): Nota de 1 a 5
+- `Title` (string, opcional): Título da avaliação
+- `Comment` (string, opcional): Comentário
+- `IsVerifiedPurchase` (bool): Compra verificada
+
+**Resposta**: `ApiResponse<ProductReviewResponse>`
 
 ---
 
-#### 4. GetFeaturedProductsQuery
-```typescript
-{
-  limit?: number;
-  categoryId?: UUID;
-}
-```
-**Implementação:**
-- Usa índice `idx_products_featured`
-- Ordenado por `created_at DESC` ou critério customizado
-- Cache agressivo (TTL longo)
+#### ⏳ UpdateProductReview
+**Status**: Pendente  
+**Descrição**: Atualiza uma avaliação existente  
+**Parâmetros**: Similares ao CreateProductReview + `Id`  
+**Resposta**: `ApiResponse<ProductReviewResponse>`
 
 ---
 
-#### 5. GetProductsByCategoryQuery
-```typescript
-{
-  categoryId: UUID;
-  includeSubcategories?: boolean;
-  page?: number;
-  pageSize?: number;
-}
-```
-**Implementação:**
-- Se `includeSubcategories = true`, busca recursivamente categorias filhas
-- Usa CTE (Common Table Expression) para hierarquia
-- Ordena por `display_order` ou relevância
+#### ⏳ DeleteProductReview
+**Status**: Pendente  
+**Descrição**: Remove uma avaliação  
+**Parâmetros**:
+- `Id` (Guid, obrigatório): ID da avaliação
+
+**Resposta**: `ApiResponse<bool>`
 
 ---
 
-#### 6. GetLowStockProductsQuery
-```typescript
-{
-  threshold?: number;
-  page?: number;
-  pageSize?: number;
-}
-```
-**Implementação:**
-- Filtra `stock <= low_stock_threshold`
-- Usado por dashboard administrativo
-- Pode gerar alertas/notificações
+#### ⏳ ApproveProductReview
+**Status**: Pendente  
+**Descrição**: Aprova uma avaliação para publicação  
+**Parâmetros**:
+- `Id` (Guid, obrigatório): ID da avaliação
+- `ModeratorId` (Guid, obrigatório): ID do moderador
+
+**Resposta**: `ApiResponse<bool>`
 
 ---
 
-#### 7. GetProductStockQuery
-```typescript
-{
-  productId: UUID;
-}
-```
-**Implementação:**
-- Retorna informações detalhadas de estoque
-```typescript
-{
-  stock: number;
-  stockReserved: number;
-  available: number; // stock - stock_reserved
-  lowStockThreshold: number;
-  isLowStock: boolean;
-}
-```
+#### ⏳ RejectProductReview
+**Status**: Pendente  
+**Descrição**: Rejeita uma avaliação  
+**Parâmetros**:
+- `Id` (Guid, obrigatório): ID da avaliação
+- `ModeratorId` (Guid, obrigatório): ID do moderador
+- `Reason` (string, opcional): Motivo da rejeição
+
+**Resposta**: `ApiResponse<bool>`
 
 ---
 
-### 📁 Category Queries
+#### ⏳ FeatureProductReview
+**Status**: Pendente  
+**Descrição**: Marca uma avaliação como destaque  
+**Parâmetros**:
+- `Id` (Guid, obrigatório): ID da avaliação
 
-#### 8. GetCategoryByIdQuery
-```typescript
-{
-  categoryId: UUID;
-}
-```
-**Implementação:**
-- Busca direta na tabela `categories`
-- Inclui categoria pai se existir
+**Resposta**: `ApiResponse<bool>`
 
 ---
 
-#### 9. GetCategoryTreeQuery
-```typescript
-{
-  rootCategoryId?: UUID;
-  maxDepth?: number;
-}
-```
-**Implementação:**
-- Retorna árvore hierárquica de categorias
-- Usa CTE recursiva para construir árvore
-- Ordena por `display_order`
+#### ⏳ UnfeatureProductReview
+**Status**: Pendente  
+**Descrição**: Remove uma avaliação dos destaques  
+**Parâmetros**:
+- `Id` (Guid, obrigatório): ID da avaliação
 
-**Response:**
-```typescript
-{
-  id: UUID;
-  name: string;
-  slug: string;
-  children: CategoryTree[];
-  productCount: number;
-}
-```
+**Resposta**: `ApiResponse<bool>`
 
 ---
 
-#### 10. GetActiveCategoriesQuery
-```typescript
-{
-  parentId?: UUID;
-}
-```
-**Implementação:**
-- Filtra `is_active = true`
-- Usado para menus de navegação
-- Cache de longa duração
+### ❤️ Favorite Products
+
+#### ⏳ AddProductToFavorites
+**Status**: Pendente  
+**Descrição**: Adiciona um produto aos favoritos do usuário  
+**Parâmetros**:
+- `UserId` (Guid, obrigatório): ID do usuário
+- `ProductId` (Guid, obrigatório): ID do produto
+
+**Resposta**: `ApiResponse<bool>`
 
 ---
 
-### ⭐ Favorite Queries
+#### ⏳ RemoveProductFromFavorites
+**Status**: Pendente  
+**Descrição**: Remove um produto dos favoritos  
+**Parâmetros**:
+- `UserId` (Guid, obrigatório): ID do usuário
+- `ProductId` (Guid, obrigatório): ID do produto
 
-#### 11. GetUserFavoritesQuery
-```typescript
-{
-  userId: UUID;
-  page?: number;
-  pageSize?: number;
-}
-```
-**Implementação:**
-- JOIN entre `favorite_products` e `product_catalog` view
-- Ordenado por `created_at DESC`
-- Retorna produtos completos com imagens
+**Resposta**: `ApiResponse<bool>`
 
 ---
 
-#### 12. CheckIsFavoriteQuery
-```typescript
-{
-  userId: UUID;
-  productId: UUID;
-}
-```
-**Implementação:**
-- Consulta simples em `favorite_products`
-- Retorna boolean
-- Usado para toggle de favorito no frontend
+### 👍 Review Votes
+
+#### ⏳ VoteReviewHelpful
+**Status**: Pendente  
+**Descrição**: Marca uma avaliação como útil  
+**Parâmetros**:
+- `ReviewId` (Guid, obrigatório): ID da avaliação
+- `UserId` (Guid, obrigatório): ID do usuário
+
+**Resposta**: `ApiResponse<bool>`
 
 ---
 
-### ⭐ Review Queries
+#### ⏳ VoteReviewUnhelpful
+**Status**: Pendente  
+**Descrição**: Marca uma avaliação como não útil  
+**Parâmetros**:
+- `ReviewId` (Guid, obrigatório): ID da avaliação
+- `UserId` (Guid, obrigatório): ID do usuário
 
-#### 13. GetProductReviewsQuery
-```typescript
-{
-  productId: UUID;
-  onlyApproved?: boolean;
-  sortBy?: 'recent' | 'helpful' | 'rating';
-  page?: number;
-  pageSize?: number;
-}
-```
-**Implementação:**
-- Filtra `is_approved = true` por padrão
-- JOIN com informações do usuário (nome pode vir de cache)
-- Inclui contadores de votos
-
-**Response:**
-```typescript
-{
-  items: Array<{
-    id: UUID;
-    rating: number;
-    title: string;
-    comment: string;
-    userName: string;
-    isVerifiedPurchase: boolean;
-    helpfulCount: number;
-    createdAt: Date;
-  }>;
-  total: number;
-}
-```
+**Resposta**: `ApiResponse<bool>`
 
 ---
 
-#### 14. GetReviewsByUserQuery
-```typescript
-{
-  userId: UUID;
-  page?: number;
-  pageSize?: number;
-}
-```
-**Implementação:**
-- Busca todas reviews de um usuário
-- JOIN com produtos para exibir nome/imagem
-- Útil para "minhas avaliações"
+#### ⏳ RemoveReviewVote
+**Status**: Pendente  
+**Descrição**: Remove um voto de uma avaliação  
+**Parâmetros**:
+- `ReviewId` (Guid, obrigatório): ID da avaliação
+- `UserId` (Guid, obrigatório): ID do usuário
+
+**Resposta**: `ApiResponse<bool>`
 
 ---
 
-#### 15. GetPendingReviewsQuery
-```typescript
-{
-  page?: number;
-  pageSize?: number;
-}
-```
-**Implementação:**
-- Filtra `is_approved = false AND deleted_at IS NULL`
-- Usado por moderadores
-- Ordenado por `created_at ASC` (FIFO)
+## 🔍 QUERIES (Read Operations)
+
+### 📂 Categories
+
+#### ⏳ GetCategoryById
+**Status**: Pendente  
+**Descrição**: Busca uma categoria por ID  
+**Parâmetros**:
+- `Id` (Guid, obrigatório): ID da categoria
+
+**Resposta**: `ApiResponse<CategoryResponse>`
 
 ---
 
-#### 16. GetReviewStatsQuery
-```typescript
-{
-  productId: UUID;
-}
-```
-**Implementação:**
-- Agregação de estatísticas de reviews
-```typescript
-{
-  totalReviews: number;
-  averageRating: number;
-  ratingDistribution: {
-    1: number,
-    2: number,
-    3: number,
-    4: number,
-    5: number
-  }
-}
-```
-- Pode ser cacheado e atualizado via trigger
+#### ⏳ GetCategoriesByParent
+**Status**: Pendente  
+**Descrição**: Busca subcategorias de uma categoria pai  
+**Parâmetros**:
+- `ParentId` (Guid?, opcional): ID da categoria pai (null = raiz)
+- `IncludeInactive` (bool): Incluir inativas (padrão: false)
+
+**Resposta**: `ApiResponse<List<CategoryResponse>>`
 
 ---
 
-## Event Sourcing
+#### ⏳ GetAllCategories
+**Status**: Pendente  
+**Descrição**: Lista todas as categorias com paginação  
+**Parâmetros**:
+- `Page` (int): Página (padrão: 1)
+- `PageSize` (int): Itens por página (padrão: 20)
+- `IncludeInactive` (bool): Incluir inativas
 
-### Outbox Events (Published)
-
-**ProductCreated**
-```json
-{
-  "eventType": "ProductCreated",
-  "payload": {
-    "productId": "uuid",
-    "name": "string",
-    "price": 99.90,
-    "stock": 100
-  }
-}
-```
-
-**ProductPriceChanged**
-```json
-{
-  "eventType": "ProductPriceChanged",
-  "payload": {
-    "productId": "uuid",
-    "oldPrice": 99.90,
-    "newPrice": 89.90
-  }
-}
-```
-
-**StockReserved**
-```json
-{
-  "eventType": "StockReserved",
-  "payload": {
-    "productId": "uuid",
-    "quantity": 2,
-    "orderId": "uuid"
-  }
-}
-```
-
-**StockCommitted**
-```json
-{
-  "eventType": "StockCommitted",
-  "payload": {
-    "productId": "uuid",
-    "quantity": 2,
-    "orderId": "uuid"
-  }
-}
-```
+**Resposta**: `ApiResponse<PagedResult<CategoryResponse>>`
 
 ---
 
-### Inbox Events (Consumed)
-
-**OrderCompleted**
-```json
-{
-  "eventType": "OrderCompleted",
-  "payload": {
-    "orderId": "uuid",
-    "userId": "uuid",
-    "items": [{"productId": "uuid", "quantity": 1}]
-  }
-}
-```
-**Handler:** Marca `is_verified_purchase = true` para reviews deste usuário/produto
-
-**OrderCancelled**
-```json
-{
-  "eventType": "OrderCancelled",
-  "payload": {
-    "orderId": "uuid",
-    "items": [{"productId": "uuid", "quantity": 1}]
-  }
-}
-```
-**Handler:** Executa `ReleaseStockCommand` para cada item
+#### ⏳ GetActiveCategoriesTree
+**Status**: Pendente  
+**Descrição**: Retorna árvore hierárquica de categorias ativas  
+**Parâmetros**: Nenhum  
+**Resposta**: `ApiResponse<List<CategoryTreeResponse>>`
 
 ---
 
-## Boas Práticas Implementadas
+#### ⏳ SearchCategories
+**Status**: Pendente  
+**Descrição**: Busca categorias por termo  
+**Parâmetros**:
+- `SearchTerm` (string, obrigatório): Termo de busca
+- `Page` (int): Página
+- `PageSize` (int): Itens por página
 
-### ✅ Command Side
-- **Idempotência:** Usar `inbox_events` para rastrear eventos processados
-- **Optimistic Locking:** Campo `version` previne race conditions
-- **Soft Deletes:** Manter histórico com `deleted_at`
-- **Event Publishing:** Triggers automáticos para Outbox Pattern
-- **Validações:** Constraints no banco + validações na aplicação
-
-### ✅ Query Side
-- **Read Models:** View `product_catalog` pré-agrega dados
-- **Índices Estratégicos:** Cobrem todos os principais filtros
-- **Caching:** Queries de catálogo podem ter TTL longo
-- **Paginação:** Sempre implementar para evitar sobrecarga
-- **Projeções:** Retornar apenas dados necessários
-
-### ✅ Separação CQRS
-- Commands modificam estado e publicam eventos
-- Queries leem de views otimizadas
-- Eventual consistency aceita (estatísticas podem estar levemente desatualizadas)
-- Commands retornam apenas ID/status, não objetos completos
+**Resposta**: `ApiResponse<PagedResult<CategoryResponse>>`
 
 ---
 
-## Diagrama de Fluxo
+### 🛍️ Products
 
-```
-┌──────────────┐         ┌──────────────┐         ┌──────────────┐
-│   Command    │────────▶│  Domain      │────────▶│   Outbox     │
-│   Handler    │         │  Model       │         │   Events     │
-└──────────────┘         └──────────────┘         └──────────────┘
-                                │                         │
-                                ▼                         ▼
-                         ┌──────────────┐         ┌──────────────┐
-                         │  Database    │         │   Message    │
-                         │  (Write)     │         │   Broker     │
-                         └──────────────┘         └──────────────┘
-                                                          │
-                                                          ▼
-                         ┌──────────────┐         ┌──────────────┐
-                         │    Query     │◀────────│   Event      │
-                         │    Handler   │         │   Handler    │
-                         └──────────────┘         └──────────────┘
-                                │
-                                ▼
-                         ┌──────────────┐
-                         │  Read Model  │
-                         │  (View)      │
-                         └──────────────┘
-```
+#### ⏳ GetProductById
+**Status**: Pendente  
+**Descrição**: Busca um produto por ID  
+**Parâmetros**:
+- `Id` (Guid, obrigatório): ID do produto
+- `IncludeImages` (bool): Incluir imagens
+- `IncludeReviews` (bool): Incluir avaliações
+
+**Resposta**: `ApiResponse<ProductDetailResponse>`
 
 ---
 
-**Documentação Técnica - Catalog Service v1.0**  
-*Arquitetura: CQRS + Event Sourcing + Outbox Pattern*
+#### ⏳ GetProductBySlug
+**Status**: Pendente  
+**Descrição**: Busca um produto por slug  
+**Parâmetros**:
+- `Slug` (string, obrigatório): Slug do produto
+- `IncludeImages` (bool): Incluir imagens
+- `IncludeReviews` (bool): Incluir avaliações
+
+**Resposta**: `ApiResponse<ProductDetailResponse>`
+
+---
+
+#### ⏳ GetProductsByCategory
+**Status**: Pendente  
+**Descrição**: Lista produtos de uma categoria  
+**Parâmetros**:
+- `CategoryId` (Guid, obrigatório): ID da categoria
+- `Page` (int): Página
+- `PageSize` (int): Itens por página
+- `SortBy` (enum): Ordenação (Name, Price, CreatedAt, Rating)
+- `SortDirection` (enum): ASC, DESC
+
+**Resposta**: `ApiResponse<PagedResult<ProductSummaryResponse>>`
+
+---
+
+#### ⏳ GetFeaturedProducts
+**Status**: Pendente  
+**Descrição**: Lista produtos em destaque  
+**Parâmetros**:
+- `Limit` (int): Quantidade máxima (padrão: 10)
+
+**Resposta**: `ApiResponse<List<ProductSummaryResponse>>`
+
+---
+
+#### ⏳ GetActiveProducts
+**Status**: Pendente  
+**Descrição**: Lista produtos ativos com paginação  
+**Parâmetros**:
+- `Page` (int): Página
+- `PageSize` (int): Itens por página
+- `SortBy` (enum): Ordenação
+- `SortDirection` (enum): Direção
+
+**Resposta**: `ApiResponse<PagedResult<ProductSummaryResponse>>`
+
+---
+
+#### ⏳ SearchProducts
+**Status**: Pendente  
+**Descrição**: Busca produtos por termo  
+**Parâmetros**:
+- `SearchTerm` (string, obrigatório): Termo de busca
+- `CategoryId` (Guid?, opcional): Filtrar por categoria
+- `MinPrice` (decimal?, opcional): Preço mínimo
+- `MaxPrice` (decimal?, opcional): Preço máximo
+- `Page` (int): Página
+- `PageSize` (int): Itens por página
+
+**Resposta**: `ApiResponse<PagedResult<ProductSummaryResponse>>`
+
+---
+
+#### ⏳ GetProductsWithLowStock
+**Status**: Pendente  
+**Descrição**: Lista produtos com estoque baixo  
+**Parâmetros**:
+- `Page` (int): Página
+- `PageSize` (int): Itens por página
+
+**Resposta**: `ApiResponse<PagedResult<ProductStockResponse>>`
+
+---
+
+#### ⏳ GetProductsByPriceRange
+**Status**: Pendente  
+**Descrição**: Lista produtos por faixa de preço  
+**Parâmetros**:
+- `MinPrice` (decimal, obrigatório): Preço mínimo
+- `MaxPrice` (decimal, obrigatório): Preço máximo
+- `Page` (int): Página
+- `PageSize` (int): Itens por página
+
+**Resposta**: `ApiResponse<PagedResult<ProductSummaryResponse>>`
+
+---
+
+### 🖼️ Product Images
+
+#### ⏳ GetProductImages
+**Status**: Pendente  
+**Descrição**: Lista imagens de um produto  
+**Parâmetros**:
+- `ProductId` (Guid, obrigatório): ID do produto
+
+**Resposta**: `ApiResponse<List<ProductImageResponse>>`
+
+---
+
+#### ⏳ GetPrimaryProductImage
+**Status**: Pendente  
+**Descrição**: Busca a imagem principal de um produto  
+**Parâmetros**:
+- `ProductId` (Guid, obrigatório): ID do produto
+
+**Resposta**: `ApiResponse<ProductImageResponse>`
+
+---
+
+### ⭐ Product Reviews
+
+#### ⏳ GetProductReviews
+**Status**: Pendente  
+**Descrição**: Lista avaliações de um produto  
+**Parâmetros**:
+- `ProductId` (Guid, obrigatório): ID do produto
+- `Page` (int): Página
+- `PageSize` (int): Itens por página
+- `OnlyApproved` (bool): Apenas aprovadas (padrão: true)
+
+**Resposta**: `ApiResponse<PagedResult<ProductReviewResponse>>`
+
+---
+
+#### ⏳ GetReviewById
+**Status**: Pendente  
+**Descrição**: Busca uma avaliação por ID  
+**Parâmetros**:
+- `Id` (Guid, obrigatório): ID da avaliação
+
+**Resposta**: `ApiResponse<ProductReviewDetailResponse>`
+
+---
+
+#### ⏳ GetReviewsByUser
+**Status**: Pendente  
+**Descrição**: Lista avaliações de um usuário  
+**Parâmetros**:
+- `UserId` (Guid, obrigatório): ID do usuário
+- `Page` (int): Página
+- `PageSize` (int): Itens por página
+
+**Resposta**: `ApiResponse<PagedResult<ProductReviewResponse>>`
+
+---
+
+#### ⏳ GetFeaturedReviews
+**Status**: Pendente  
+**Descrição**: Lista avaliações em destaque  
+**Parâmetros**:
+- `Limit` (int): Quantidade máxima (padrão: 5)
+
+**Resposta**: `ApiResponse<List<ProductReviewResponse>>`
+
+---
+
+#### ⏳ GetPendingReviews
+**Status**: Pendente  
+**Descrição**: Lista avaliações pendentes de moderação  
+**Parâmetros**:
+- `Page` (int): Página
+- `PageSize` (int): Itens por página
+
+**Resposta**: `ApiResponse<PagedResult<ProductReviewResponse>>`
+
+---
+
+### ❤️ Favorite Products
+
+#### ⏳ GetUserFavoriteProducts
+**Status**: Pendente  
+**Descrição**: Lista produtos favoritos de um usuário  
+**Parâmetros**:
+- `UserId` (Guid, obrigatório): ID do usuário
+- `Page` (int): Página
+- `PageSize` (int): Itens por página
+
+**Resposta**: `ApiResponse<PagedResult<ProductSummaryResponse>>`
+
+---
+
+#### ⏳ CheckIfProductIsFavorited
+**Status**: Pendente  
+**Descrição**: Verifica se um produto está nos favoritos  
+**Parâmetros**:
+- `UserId` (Guid, obrigatório): ID do usuário
+- `ProductId` (Guid, obrigatório): ID do produto
+
+**Resposta**: `ApiResponse<bool>`
+
+---
+
+### 📊 Statistics/Analytics
+
+#### ⏳ GetProductViewCount
+**Status**: Pendente  
+**Descrição**: Retorna contagem de visualizações de um produto  
+**Parâmetros**:
+- `ProductId` (Guid, obrigatório): ID do produto
+
+**Resposta**: `ApiResponse<int>`
+
+---
+
+#### ⏳ GetProductFavoriteCount
+**Status**: Pendente  
+**Descrição**: Retorna contagem de favoritos de um produto  
+**Parâmetros**:
+- `ProductId` (Guid, obrigatório): ID do produto
+
+**Resposta**: `ApiResponse<int>`
+
+---
+
+#### ⏳ GetProductReviewStats
+**Status**: Pendente  
+**Descrição**: Retorna estatísticas de avaliações de um produto  
+**Parâmetros**:
+- `ProductId` (Guid, obrigatório): ID do produto
+
+**Resposta**: `ApiResponse<ProductReviewStatsResponse>`
+
+---
+
+#### ⏳ GetCategoryProductCount
+**Status**: Pendente  
+**Descrição**: Retorna contagem de produtos por categoria  
+**Parâmetros**:
+- `CategoryId` (Guid, obrigatório): ID da categoria
+- `IncludeSubcategories` (bool): Incluir subcategorias
+
+**Resposta**: `ApiResponse<int>`
+
+---
+
+## 📝 Notas de Implementação
+
+### 🏗️ Estrutura de Pastas Sugerida
+
+```
+CatalogService.Application/
+├── Commands/
+│   ├── Categories/
+│   │   ├── CreateCategory/ ✅
+│   │   ├── UpdateCategory/
+│   │   ├── DeleteCategory/
+│   │   ├── ActivateCategory/
+│   │   └── DeactivateCategory/
+│   ├── Products/
+│   │   ├── CreateProduct/ ✅
+│   │   ├── UpdateProduct/
+│   │   ├── DeleteProduct/
+│   │   ├── UpdateProductStock/
+│   │   └── UpdateProductPrice/
+│   ├── ProductImages/
+│   ├── ProductReviews/
+│   ├── FavoriteProducts/
+│   └── ReviewVotes/
+└── Queries/
+    ├── Categories/
+    ├── Products/
+    ├── ProductImages/
+    ├── ProductReviews/
+    ├── FavoriteProducts/
+    └── Statistics/
+```
+
+### 🔧 Padrões de Implementação
+
+1. **Commands**: Usar padrão CQRS com handlers separados
+2. **Validação**: FluentValidation para commands, validação de domínio para aggregates
+3. **Transações**: UnitOfWork para operações que modificam dados
+4. **Responses**: ApiResponse wrapper para todas as respostas
+5. **Paginação**: PagedResult para listas grandes
+6. **Logging**: Structured logging com contexto
+
+### 🚀 Prioridades de Implementação
+
+**Fase 1 - Core**:
+- ✅ CreateCategory
+- ✅ CreateProduct
+- GetProductById
+- GetProductBySlug
+- GetCategoryById
+
+**Fase 2 - CRUD Completo**:
+- UpdateProduct
+- UpdateCategory
+- DeleteProduct
+- DeleteCategory
+
+**Fase 3 - Features Avançadas**:
+- SearchProducts
+- ProductImages
+- ProductReviews
+- FavoriteProducts
+
+**Fase 4 - Analytics**:
+- Statistics queries
+- Review votes
+- Advanced filtering
+
+---
+
+*Documento atualizado em: 01/11/2024*  
+*Versão: 1.0*
