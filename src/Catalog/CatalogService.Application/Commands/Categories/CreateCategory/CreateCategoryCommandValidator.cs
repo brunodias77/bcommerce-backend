@@ -1,10 +1,11 @@
 using BuildingBlocks.Core.Validations;
+using BuildingBlocks.CQRS.Validations;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace CatalogService.Application.Commands.Categories.CreateCategory;
 
-public class CreateCategoryCommandValidator
+public class CreateCategoryCommandValidator : IValidator<CreateCategoryCommand>
 {
     public ValidationHandler Validate(CreateCategoryCommand command)
     {

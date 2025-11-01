@@ -1,8 +1,8 @@
-using BuildingBlocks.Core.Events;
+using BuildingBlocks.CQRS.Events;
 
-namespace CatalogService.Domain.Events.Products;
+namespace CatalogService.Application.Events.Products;
 
-public record ProductCreatedEvent(
+public record ProductCreatedNotification(
     Guid ProductId,
     string Name,
     decimal Price) : IDomainEvent

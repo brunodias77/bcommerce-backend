@@ -27,6 +27,9 @@ public static class ServiceCollectionExtensions
 
         // Registra todos os handlers encontrados
         RegisterHandlers(services, assemblies);
+        
+        // Registra todos os behaviors encontrados
+        RegisterBehaviors(services, assemblies);
 
         return services;
     }
@@ -95,6 +98,32 @@ public static class ServiceCollectionExtensions
                 foreach (var interfaceType in interfaces)
                 {
                     services.AddScoped(interfaceType, handlerType);
+                }
+            }
+        }
+    }
+
+    private static void RegisterBehaviors(IServiceCollection services, Assembly[] assemblies)
+    {
+        foreach (var assembly in assemblies)
+        {
+            // Busca todos os tipos que implementam IPipelineBehavior
+            var behaviorTypes = assembly.GetTypes()
+                .Where(t => t.IsClass && !t.IsAbstract)
+                .Where(t => t.GetInterfaces().Any(i => 
+                    i.IsGenericType && 
+                    i.GetGenericTypeDefinition() == typeof(IPipelineBehavior<,>)))
+                .ToList();
+
+            foreach (var behaviorType in behaviorTypes)
+            {
+                var interfaces = behaviorType.GetInterfaces()
+                    .Where(i => i.IsGenericType && 
+                               i.GetGenericTypeDefinition() == typeof(IPipelineBehavior<,>));
+
+                foreach (var interfaceType in interfaces)
+                {
+                    services.AddScoped(interfaceType, behaviorType);
                 }
             }
         }
