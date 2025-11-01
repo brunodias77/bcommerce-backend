@@ -33,18 +33,15 @@ public class InboxEvent : Entity
             CreatedAt = DateTime.UtcNow
         };
 
-        var validationResult = inboxEvent.Validate();
-        if (validationResult.HasErrors)
-        {
-            throw new ArgumentException($"Dados inválidos: {string.Join(", ", validationResult.Errors.Select(e => e.Message))}");
-        }
+        var validationHandler = new ValidationHandler();
+        inboxEvent.Validate(validationHandler);
+        validationHandler.ThrowIfHasErrors();
 
         return inboxEvent;
     }
     
-    public override ValidationHandler Validate()
+    public override ValidationHandler Validate(ValidationHandler handler)
     {
-        var handler = new ValidationHandler();
         
         // Validar EventType
         if (string.IsNullOrEmpty(EventType))

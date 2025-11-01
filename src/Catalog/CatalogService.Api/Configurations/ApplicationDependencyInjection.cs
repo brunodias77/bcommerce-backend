@@ -23,6 +23,9 @@ public static class ApplicationDependencyInjection
 
     private static void AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
     {
+        // Validators
+        services.AddScoped<CreateCategoryCommandValidator>();
+        
         // services.AddScoped<ILoggedUser, LoggedUser>();
         // services.AddHttpContextAccessor();
         // services.AddMemoryCache();

@@ -75,19 +75,7 @@ public class Product : AggregateRoot
         string? sku = null,
         bool isActive = true)
     {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Name is required", nameof(name));
-
-        if (string.IsNullOrWhiteSpace(slug))
-            throw new ArgumentException("Slug is required", nameof(slug));
-
-        if (price == null)
-            throw new ArgumentException("Price is required", nameof(price));
-
-        if (stock < 0)
-            throw new ArgumentException("Stock cannot be negative", nameof(stock));
-
-        var product = new Product
+        return new Product
         {
             Name = name,
             Slug = slug,
@@ -110,19 +98,11 @@ public class Product : AggregateRoot
             UpdatedAt = DateTime.UtcNow
         };
 
-        var validationResult = product.Validate();
-        if (validationResult.HasErrors)
-        {
-            throw new ArgumentException($"Dados inválidos: {string.Join(", ", validationResult.Errors.Select(e => e.Message))}");
-        }
 
-        return product;
     }
     
-    public override ValidationHandler Validate()
+    public override ValidationHandler Validate(ValidationHandler handler)
     {
-        var handler = new ValidationHandler();
-        
         // Validar Name
         if (string.IsNullOrWhiteSpace(Name))
             handler.Add("Nome do produto é obrigatório");

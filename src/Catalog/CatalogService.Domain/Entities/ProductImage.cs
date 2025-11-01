@@ -48,18 +48,15 @@ public class ProductImage : Entity
             UpdatedAt = DateTime.UtcNow
         };
 
-        var validationResult = productImage.Validate();
-        if (validationResult.HasErrors)
-        {
-            throw new ArgumentException($"Dados inválidos: {string.Join(", ", validationResult.Errors.Select(e => e.Message))}");
-        }
+        var validationHandler = new ValidationHandler();
+        productImage.Validate(validationHandler);
+        validationHandler.ThrowIfHasErrors();
 
         return productImage;
     }
 
-    public override ValidationHandler Validate()
+    public override ValidationHandler Validate(ValidationHandler handler)
     {
-        var handler = new ValidationHandler();
         
         // Validar ProductId
         if (ProductId == Guid.Empty)

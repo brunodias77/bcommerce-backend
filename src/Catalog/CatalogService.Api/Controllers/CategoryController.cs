@@ -1,5 +1,6 @@
 using BuildingBlocks.CQRS.Mediator;
 using BuildingBlocks.Core.Responses;
+using BuildingBlocks.Core.Validations;
 using CatalogService.Application.Commands.Categories.CreateCategory;
 using Microsoft.AspNetCore.Mvc;
 
@@ -50,9 +51,10 @@ public class CategoryController : ControllerBase
                 _logger.LogWarning("⚠️ Dados inválidos para criação de categoria: {Errors}", 
                     string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
                 
-
                 
-                return BadRequest(ApiResponse<CreateCategoryResponse>.Fail("VALIDATION_ERROR", "Dados inválidos."));
+                var errorHandler = new ValidationHandler();
+                errorHandler.Add("Dados inválidos.");
+                return BadRequest(ApiResponse<CreateCategoryResponse>.Fail(errorHandler.Errors.ToList()));
             }
 
             // Enviar command via Mediator
@@ -77,14 +79,18 @@ public class CategoryController : ControllerBase
         catch (ArgumentException ex)
         {
             _logger.LogWarning(ex, "⚠️ Erro de validação na criação de categoria: {ErrorMessage}", ex.Message);
-            return BadRequest(ApiResponse<CreateCategoryResponse>.Fail("VALIDATION_ERROR", ex.Message));
+            var errorHandler = new ValidationHandler();
+            errorHandler.Add(ex.Message);
+            return BadRequest(ApiResponse<CreateCategoryResponse>.Fail(errorHandler.Errors.ToList()));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "💥 Erro interno na criação de categoria");
+            var errorHandler = new ValidationHandler();
+            errorHandler.Add("Erro interno do servidor.");
             return StatusCode(
                 StatusCodes.Status500InternalServerError, 
-                ApiResponse<CreateCategoryResponse>.Fail("INTERNAL_ERROR", "Erro interno do servidor."));
+                ApiResponse<CreateCategoryResponse>.Fail(errorHandler.Errors.ToList()));
         }
     }
 }

@@ -17,8 +17,8 @@ public class Category : AggregateRoot
     public int Version { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
-    
-    private Category() 
+
+    private Category()
     {
         Name = string.Empty;
         Slug = string.Empty;
@@ -35,7 +35,7 @@ public class Category : AggregateRoot
         string metadata = "{}")
     {
         // 1. Apenas criamos a instância com os dados recebidos.
-        var category = new Category
+        return new Category
         {
             Name = name,
             Slug = slug,
@@ -49,23 +49,16 @@ public class Category : AggregateRoot
             UpdatedAt = DateTime.UtcNow
         };
 
-        // 2. Chamamos o método de validação e o deixamos lançar a exceção se necessário.
-        category.Validate().ThrowIfHasErrors();
-        
-        // Se a linha acima não lançou uma exceção, o objeto é válido.
-        return category;
     }
-    
-    public override ValidationHandler Validate()
+
+    public override ValidationHandler Validate(ValidationHandler handler)
     {
-        var handler = new ValidationHandler();
-        
         // Validar Name (movido do Create para cá)
         if (string.IsNullOrWhiteSpace(Name))
             handler.Add("Nome da categoria é obrigatório");
         else if (Name.Length > 200)
             handler.Add("Nome da categoria deve ter no máximo 200 caracteres");
-        
+
         // Validar Slug (movido do Create para cá)
         if (string.IsNullOrWhiteSpace(Slug))
             handler.Add("Slug da categoria é obrigatório");
@@ -73,21 +66,21 @@ public class Category : AggregateRoot
             handler.Add("Slug da categoria deve ter no máximo 200 caracteres");
         else if (!IsValidSlug(Slug))
             handler.Add("Slug deve conter apenas letras minúsculas, números e hífens, sem espaços ou caracteres especiais");
-        
+
         // Validar Description
         if (!string.IsNullOrEmpty(Description) && Description.Length > 1000)
             handler.Add("Descrição da categoria deve ter no máximo 1000 caracteres");
-        
+
         // Validar DisplayOrder (movido do Create para cá)
         if (DisplayOrder < 0)
             handler.Add("Ordem de exibição deve ser maior ou igual a zero");
-        
+
         // Validar Metadata
         if (string.IsNullOrWhiteSpace(Metadata))
             handler.Add("Metadata da categoria é obrigatório"); // Geralmente é opcional, mas mantendo sua regra.
         else if (!IsValidJson(Metadata))
             handler.Add("Metadata deve ser um JSON válido");
-        
+
         return handler;
     }
     private static bool IsValidSlug(string slug)
@@ -97,7 +90,7 @@ public class Category : AggregateRoot
         var slugPattern = @"^[a-z0-9]+(?:-[a-z0-9]+)*$";
         return Regex.IsMatch(slug, slugPattern);
     }
-    
+
     private static bool IsValidJson(string json)
     {
         try

@@ -19,26 +19,18 @@ public class FavoriteProduct : Entity
         if (productId == Guid.Empty)
             throw new ArgumentException("ProductId cannot be empty", nameof(productId));
 
-        var favorite = new FavoriteProduct
+        return new FavoriteProduct
         {
             UserId = userId,
             ProductId = productId,
             CreatedAt = DateTime.UtcNow
         };
 
-        var validationResult = favorite.Validate();
-        if (validationResult.HasErrors)
-        {
-            throw new ArgumentException($"Dados inválidos: {string.Join(", ", validationResult.Errors.Select(e => e.Message))}");
-        }
-
-        return favorite;
+       
     }
 
-    public override ValidationHandler Validate()
+    public override ValidationHandler Validate(ValidationHandler handler)
     {
-        var handler = new ValidationHandler();
-        
         // Validar UserId
         if (UserId == Guid.Empty)
             handler.Add("ID do usuário é obrigatório");

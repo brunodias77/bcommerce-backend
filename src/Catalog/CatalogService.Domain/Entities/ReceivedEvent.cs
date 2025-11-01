@@ -42,18 +42,15 @@ public class ReceivedEvent : Entity
             CreatedAt = DateTime.UtcNow
         };
 
-        var validationResult = receivedEvent.Validate();
-        if (validationResult.HasErrors)
-        {
-            throw new ArgumentException($"Dados inválidos: {string.Join(", ", validationResult.Errors.Select(e => e.Message))}");
-        }
+        var validationHandler = new ValidationHandler();
+        receivedEvent.Validate(validationHandler);
+        validationHandler.ThrowIfHasErrors();
 
         return receivedEvent;
     }
     
-    public override ValidationHandler Validate()
+    public override ValidationHandler Validate(ValidationHandler handler)
     {
-        var handler = new ValidationHandler();
         
         // Validar EventType
         if (string.IsNullOrEmpty(EventType))

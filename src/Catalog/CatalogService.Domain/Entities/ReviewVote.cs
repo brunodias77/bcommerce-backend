@@ -28,18 +28,15 @@ public class ReviewVote : Entity
             CreatedAt = DateTime.UtcNow
         };
 
-        var validationResult = reviewVote.Validate();
-        if (validationResult.HasErrors)
-        {
-            throw new ArgumentException($"Dados inválidos: {string.Join(", ", validationResult.Errors.Select(e => e.Message))}");
-        }
+        var validationHandler = new ValidationHandler();
+        reviewVote.Validate(validationHandler);
+        validationHandler.ThrowIfHasErrors();
 
         return reviewVote;
     }
     
-    public override ValidationHandler Validate()
+    public override ValidationHandler Validate(ValidationHandler handler)
     {
-        var handler = new ValidationHandler();
         
         // Validar ReviewId
         if (ReviewId == Guid.Empty)

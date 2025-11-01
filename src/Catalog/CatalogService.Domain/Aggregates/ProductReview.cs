@@ -44,16 +44,8 @@ public class ProductReview : AggregateRoot
         string? comment = null,
         bool isVerifiedPurchase = false)
     {
-        if (productId == Guid.Empty)
-            throw new ArgumentException("ProductId cannot be empty", nameof(productId));
 
-        if (userId == Guid.Empty)
-            throw new ArgumentException("UserId cannot be empty", nameof(userId));
-
-        if (rating == null)
-            throw new ArgumentException("Rating is required", nameof(rating));
-
-        var review = new ProductReview
+        return new ProductReview
         {
             ProductId = productId,
             UserId = userId,
@@ -70,19 +62,11 @@ public class ProductReview : AggregateRoot
             UpdatedAt = DateTime.UtcNow
         };
 
-        var validationResult = review.Validate();
-        if (validationResult.HasErrors)
-        {
-            throw new ArgumentException($"Dados inválidos: {string.Join(", ", validationResult.Errors.Select(e => e.Message))}");
-        }
 
-        return review;
     }
     
-    public override ValidationHandler Validate()
+    public override ValidationHandler Validate(ValidationHandler handler)
     {
-        var handler = new ValidationHandler();
-        
         // Validar ProductId
         if (ProductId == Guid.Empty)
             handler.Add("ID do produto é obrigatório");

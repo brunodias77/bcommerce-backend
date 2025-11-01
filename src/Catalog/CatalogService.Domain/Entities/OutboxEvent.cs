@@ -72,18 +72,15 @@ public class OutboxEvent : Entity
             UpdatedAt = DateTime.UtcNow
         };
 
-        var validationResult = outboxEvent.Validate();
-        if (validationResult.HasErrors)
-        {
-            throw new ArgumentException($"Dados inválidos: {string.Join(", ", validationResult.Errors.Select(e => e.Message))}");
-        }
+        var validationHandler = new ValidationHandler();
+        outboxEvent.Validate(validationHandler);
+        validationHandler.ThrowIfHasErrors();
 
         return outboxEvent;
     }
     
-    public override ValidationHandler Validate()
+    public override ValidationHandler Validate(ValidationHandler handler)
     {
-        var handler = new ValidationHandler();
         
         // Validar AggregateId
         if (AggregateId == Guid.Empty)

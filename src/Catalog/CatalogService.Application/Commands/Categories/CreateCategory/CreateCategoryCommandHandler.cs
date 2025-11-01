@@ -1,6 +1,7 @@
 using System.Linq;
 using BuildingBlocks.Core.Data;
 using BuildingBlocks.Core.Responses;
+using BuildingBlocks.Core.Validations;
 using BuildingBlocks.CQRS.Commands;
 using CatalogService.Domain.Aggregates;
 using CatalogService.Domain.Repository;
@@ -11,16 +12,28 @@ public class CreateCategoryCommandHandler : ICommandHandler<CreateCategoryComman
 {
     private readonly ICategoryRepository _categoryRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly CreateCategoryCommandValidator _validator;
 
-    public CreateCategoryCommandHandler(ICategoryRepository categoryRepository, IUnitOfWork unitOfWork)
+    public CreateCategoryCommandHandler(
+        ICategoryRepository categoryRepository, 
+        IUnitOfWork unitOfWork,
+        CreateCategoryCommandValidator validator)
     {
         _categoryRepository = categoryRepository;
         _unitOfWork = unitOfWork;
+        _validator = validator;
     }
 
     public async Task<ApiResponse<CreateCategoryResponse>> HandleAsync(CreateCategoryCommand request, CancellationToken cancellationToken = default)
     {
-        // Iniciar transação explícita
+        // 1. Validar o comando ANTES de qualquer operação
+        var validationResult = _validator.Validate(request);
+        if (validationResult.HasErrors)
+        {
+            return ApiResponse<CreateCategoryResponse>.Fail(validationResult.Errors.ToList());
+        }
+
+        // 2. Iniciar transação explícita
         await _unitOfWork.BeginTransactionAsync(cancellationToken);
         
         try
@@ -30,7 +43,8 @@ public class CreateCategoryCommandHandler : ICommandHandler<CreateCategoryComman
             if (existingCategories.Any())
             {
                 await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-                return ApiResponse<CreateCategoryResponse>.Fail("CATEGORY_SLUG_EXISTS", "Já existe uma categoria com este slug.");
+                validationResult.Add("Já existe uma categoria com este slug.");
+                return ApiResponse<CreateCategoryResponse>.Fail(validationResult.Errors.ToList());
             }
 
             // Criar a categoria usando o método factory
@@ -71,12 +85,14 @@ public class CreateCategoryCommandHandler : ICommandHandler<CreateCategoryComman
         catch (ArgumentException ex)
         {
             await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-            return ApiResponse<CreateCategoryResponse>.Fail("VALIDATION_ERROR", ex.Message);
+            validationResult.Add(ex.Message);
+            return ApiResponse<CreateCategoryResponse>.Fail(validationResult.Errors.ToList());
         }
         catch (Exception ex)
         {
             await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-            return ApiResponse<CreateCategoryResponse>.Fail("INTERNAL_ERROR", $"Erro interno do servidor: {ex.Message}");
+            validationResult.Add($"Erro interno do servidor: {ex.Message}");
+            return ApiResponse<CreateCategoryResponse>.Fail(validationResult.Errors.ToList());
         }
     }
 }
