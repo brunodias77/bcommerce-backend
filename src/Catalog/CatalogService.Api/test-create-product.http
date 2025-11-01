@@ -1,0 +1,52 @@
+### Teste do endpoint CreateProduct
+POST http://localhost:5556/api/products
+Content-Type: application/json
+
+{
+  "name": "Smartphone Samsung Galaxy",
+  "slug": "smartphone-samsung-galaxy",
+  "description": "Smartphone Samsung Galaxy com excelente qualidade, tela AMOLED e câmera de alta resolução",
+  "shortDescription": "Smartphone Samsung Galaxy",
+  "price": 1299.99,
+  "currency": "BRL",
+  "stock": 50,
+  "lowStockThreshold": 5,
+  "sku": "SAMSUNG-GALAXY-001",
+  "isActive": true,
+  "isFeatured": false
+}
+
+### Teste com produto em destaque
+POST http://localhost:5556/api/products
+Content-Type: application/json
+
+{
+  "name": "iPhone 15 Pro",
+  "slug": "iphone-15-pro",
+  "description": "iPhone 15 Pro com chip A17 Pro, câmera profissional e design em titânio",
+  "shortDescription": "iPhone 15 Pro",
+  "price": 8999.99,
+  "currency": "BRL",
+  "compareAtPrice": 9999.99,
+  "stock": 25,
+  "lowStockThreshold": 3,
+  "sku": "IPHONE-15-PRO-001",
+  "barcode": "1234567890123",
+  "weightKg": 0.187,
+  "metaTitle": "iPhone 15 Pro - O mais avançado iPhone",
+  "metaDescription": "Compre o iPhone 15 Pro com chip A17 Pro e câmera profissional",
+  "isActive": true,
+  "isFeatured": true
+}
+
+### Teste com dados inválidos (para testar validação)
+POST http://localhost:5556/api/products
+Content-Type: application/json
+
+{
+  "name": "",
+  "slug": "produto-invalido",
+  "price": -100,
+  "currency": "BRL",
+  "stock": -5
+}
