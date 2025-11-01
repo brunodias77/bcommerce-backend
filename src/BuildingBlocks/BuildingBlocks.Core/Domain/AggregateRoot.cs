@@ -1,4 +1,4 @@
-using BuildingBlocks.CQRS.Events;
+using BuildingBlocks.Core.Events;
 
 namespace BuildingBlocks.Core.Domain;
 

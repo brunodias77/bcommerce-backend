@@ -1,11 +1,11 @@
 using BuildingBlocks.CQRS.Events;
-using CatalogService.Domain.Events.Products;
+using CatalogService.Application.Events.Products;
 
 namespace CatalogService.Application.EventHandlers.Products;
 
-public class ProductCreatedEventHandler : IDomainEventHandler<ProductCreatedEvent>
+public class ProductCreatedEventHandler : IDomainEventHandler<ProductCreatedNotification>
 {
-    public Task HandleAsync(ProductCreatedEvent notification, CancellationToken cancellationToken = default)
+    public Task HandleAsync(ProductCreatedNotification notification, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }

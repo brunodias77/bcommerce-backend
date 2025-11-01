@@ -1,6 +1,7 @@
 using BuildingBlocks.CQRS.Mediator;
 using BuildingBlocks.Core.Responses;
 using BuildingBlocks.Core.Validations;
+using BuildingBlocks.Core.Exceptions;
 using CatalogService.Application.Commands.Products.CreateProduct;
 using Microsoft.AspNetCore.Mvc;
 
@@ -40,57 +41,29 @@ public class ProductController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<CreateProductResponse>), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CreateProduct([FromBody] CreateProductCommand command, CancellationToken cancellationToken = default)
     {
-        try
+        _logger.LogInformation("📝 Iniciando criação de produto: {ProductName} com slug: {ProductSlug}", 
+            command.Name, command.Slug);
+
+        // Validar ModelState
+        if (!ModelState.IsValid)
         {
-            _logger.LogInformation("📝 Iniciando criação de produto: {ProductName} com slug: {ProductSlug}", 
-                command.Name, command.Slug);
-
-            // Validar ModelState
-            if (!ModelState.IsValid)
-            {
-                _logger.LogWarning("⚠️ Dados inválidos para criação de produto: {Errors}", 
-                    string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
-                
-                
-                var errorHandler = new ValidationHandler();
-                errorHandler.Add("Dados inválidos.");
-                return BadRequest(ApiResponse<CreateProductResponse>.Fail(errorHandler.Errors.ToList()));
-            }
-
-            // Enviar command via Mediator
-            var result = await _mediator.SendAsync<ApiResponse<CreateProductResponse>>(command, cancellationToken);
-
-            if (result.Success && result.Data != null)
-            {
-                _logger.LogInformation("✅ Produto criado com sucesso: ID {ProductId}, Nome: {ProductName}", 
-                    result.Data.Id, result.Data.Name);
-                
-                return CreatedAtAction(
-                    nameof(CreateProduct), 
-                    new { id = result.Data.Id }, 
-                    result);
-            }
-
-            // Se chegou aqui, houve erro
-            _logger.LogWarning("❌ Falha na criação de produto: {ErrorMessage}", result.Message);
-            return BadRequest(result);
-
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => new Error(e.ErrorMessage))
+                .ToList();
+            
+            throw new ValidationException(errors);
         }
-        catch (ArgumentException ex)
-        {
-            _logger.LogWarning(ex, "⚠️ Erro de validação na criação de produto: {ErrorMessage}", ex.Message);
-            var errorHandler = new ValidationHandler();
-            errorHandler.Add(ex.Message);
-            return BadRequest(ApiResponse<CreateProductResponse>.Fail(errorHandler.Errors.ToList()));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "💥 Erro interno na criação de produto");
-            var errorHandler = new ValidationHandler();
-            errorHandler.Add("Erro interno do servidor.");
-            return StatusCode(
-                StatusCodes.Status500InternalServerError, 
-                ApiResponse<CreateProductResponse>.Fail(errorHandler.Errors.ToList()));
-        }
+
+        // Enviar command via Mediator
+        var result = await _mediator.SendAsync<ApiResponse<CreateProductResponse>>(command, cancellationToken);
+
+        _logger.LogInformation("✅ Produto criado com sucesso: ID {ProductId}, Nome: {ProductName}", 
+            result.Data.Id, result.Data.Name);
+        
+        return CreatedAtAction(
+            nameof(CreateProduct), 
+            new { id = result.Data.Id }, 
+            result);
     }
 }

@@ -1,5 +1,6 @@
 
 
+using BuildingBlocks.Core.Middlewares;
 using CatalogService.Api.Configurations;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
@@ -69,22 +70,21 @@ app.UseSerilogRequestLogging(options =>
     };
 });
 
+// 2. Global Exception Handler - DEVE VIR LOGO APÓS o logging para capturar todas as exceções
+app.UseGlobalExceptionHandler();
 
-// 2. CORS - DEVE VIR ANTES de outros middlewares
+// 3. CORS - DEVE VIR ANTES de outros middlewares
 app.UseCors("AllowFrontendApps");
 
-// 3. HTTPS Redirection - SEMPRE PRIMEIRO para forçar HTTPS
+// 4. HTTPS Redirection - SEMPRE PRIMEIRO para forçar HTTPS
 app.UseHttpsRedirection();
 
-// 4. Swagger - Documentação da API
+// 5. Swagger - Documentação da API
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-// 5. BuildingBlocks Middlewares - segurança, validação, monitoramento
-//app.UseBuildingBlocksMiddleware(app.Environment.IsDevelopment());
 
 // 6. Middleware de autenticação e autorização - APÓS os middlewares de segurança
 app.UseAuthentication();

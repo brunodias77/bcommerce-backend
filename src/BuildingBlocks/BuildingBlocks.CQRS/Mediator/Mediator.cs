@@ -37,21 +37,48 @@ public class Mediator : IMediator
             throw new ArgumentNullException(nameof(request));
 
         var requestType = request.GetType();
-        var handlerType = typeof(IRequestHandler<,>).MakeGenericType(requestType, typeof(TResponse));
         
-        var handler = _serviceProvider.GetService(handlerType);
+        // Buscar behaviors para o tipo de request
+        var behaviorType = typeof(IPipelineBehavior<,>).MakeGenericType(requestType, typeof(TResponse));
+        var behaviors = _serviceProvider.GetServices(behaviorType).Cast<object>().ToList();
         
-        if (handler == null)
-            throw new InvalidOperationException($"Handler não encontrado para o tipo {requestType.Name}");
+        // Criar delegate para o handler final
+        RequestHandlerDelegate<TResponse> handlerDelegate = async () =>
+        {
+            var handlerType = typeof(IRequestHandler<,>).MakeGenericType(requestType, typeof(TResponse));
+            var handler = _serviceProvider.GetService(handlerType);
+            
+            if (handler == null)
+                throw new InvalidOperationException($"Handler não encontrado para o tipo {requestType.Name}");
 
-        var method = handlerType.GetMethod(nameof(IRequestHandler<IRequest<TResponse>, TResponse>.HandleAsync));
-        
-        if (method == null)
-            throw new InvalidOperationException($"Método HandleAsync não encontrado no handler {handlerType.Name}");
+            var method = handlerType.GetMethod(nameof(IRequestHandler<IRequest<TResponse>, TResponse>.HandleAsync));
+            
+            if (method == null)
+                throw new InvalidOperationException($"Método HandleAsync não encontrado no handler {handlerType.Name}");
 
-        var task = (Task<TResponse>)method.Invoke(handler, new object[] { request, cancellationToken })!;
+            var task = (Task<TResponse>)method.Invoke(handler, new object[] { request, cancellationToken })!;
+            return await task;
+        };
         
-        return await task;
+        // Construir pipeline de behaviors (executa na ordem reversa)
+        for (int i = behaviors.Count - 1; i >= 0; i--)
+        {
+            var behavior = behaviors[i];
+            var currentDelegate = handlerDelegate;
+            
+            handlerDelegate = async () =>
+            {
+                var behaviorMethod = behaviorType.GetMethod(nameof(IPipelineBehavior<IRequest<TResponse>, TResponse>.HandleAsync));
+                if (behaviorMethod == null)
+                    throw new InvalidOperationException($"Método HandleAsync não encontrado no behavior {behavior.GetType().Name}");
+                
+                var task = (Task<TResponse>)behaviorMethod.Invoke(behavior, new object[] { request, currentDelegate, cancellationToken })!;
+                return await task;
+            };
+        }
+        
+        // Executar pipeline
+        return await handlerDelegate();
     }
 
     /// <inheritdoc />
