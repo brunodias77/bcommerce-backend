@@ -1,4 +1,6 @@
+using BuildingBlocks.CQRS.Mediator;
 using CatalogService.Api.Health;
+using CatalogService.Application.Commands.Categories.CreateCategory;
 
 namespace CatalogService.Api.Configurations;
 
@@ -15,7 +17,7 @@ public static class ApplicationDependencyInjection
 
     private static void AddMediator(this IServiceCollection services, IConfiguration configuration)
     {
-     //   services.AddMediator(typeof(CreateProductCommandHandler).Assembly);
+        services.AddMediator(typeof(CreateCategoryCommandHandler).Assembly);
     }
 
 
