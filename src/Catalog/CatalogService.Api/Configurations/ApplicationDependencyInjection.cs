@@ -1,3 +1,4 @@
+using BuildingBlocks.CQRS.Behaviors;
 using BuildingBlocks.CQRS.Mediator;
 using BuildingBlocks.CQRS.Validations;
 using CatalogService.Api.Health;
@@ -23,8 +24,11 @@ public static class ApplicationDependencyInjection
         // Registrar Mediator com assembly da Application
         services.AddMediator(typeof(CreateCategoryCommandHandler).Assembly);
         
-        // Registrar ValidationBehavior manualmente
-        services.AddScoped(typeof(BuildingBlocks.CQRS.Mediator.IPipelineBehavior<,>), typeof(BuildingBlocks.CQRS.Behaviors.ValidationBehavior<,>));
+        // Registrar ValidationBehavior manualmente (executa primeiro)
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        
+        // Registrar TransactionBehavior manualmente (executa após ValidationBehavior)
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(TransactionBehavior<,>));
     }
 
 

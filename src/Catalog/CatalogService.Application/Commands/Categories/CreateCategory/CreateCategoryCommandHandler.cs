@@ -32,50 +32,36 @@ public class CreateCategoryCommandHandler : ICommandHandler<CreateCategoryComman
             throw new DomainException("Já existe uma categoria com este slug.");
         }
 
-        // 2. Iniciar transação explícita
-        await _unitOfWork.BeginTransactionAsync(cancellationToken);
-        
-        try
+        // 2. Criar a categoria usando o método factory
+        var category = Category.Create(
+            request.Name,
+            request.Slug,
+            request.Description,
+            request.ParentId,
+            request.DisplayOrder,
+            request.IsActive,
+            request.Metadata
+        );
+
+        // 3. Salvar no repositório
+        await _categoryRepository.AddAsync(category, cancellationToken);
+
+        // 4. Persistir mudanças no banco (TransactionBehavior gerencia a transação automaticamente)
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // 5. Criar resposta de sucesso
+        var response = new CreateCategoryResponse
         {
-            // Criar a categoria usando o método factory
-            var category = Category.Create(
-                request.Name,
-                request.Slug,
-                request.Description,
-                request.ParentId,
-                request.DisplayOrder,
-                request.IsActive,
-                request.Metadata
-            );
+            Id = category.Id,
+            Name = category.Name,
+            Slug = category.Slug,
+            Description = category.Description,
+            ParentId = category.ParentId,
+            IsActive = category.IsActive,
+            DisplayOrder = category.DisplayOrder,
+            CreatedAt = category.CreatedAt
+        };
 
-            // Salvar no repositório
-            await _categoryRepository.AddAsync(category, cancellationToken);
-
-            // Persistir mudanças no banco
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-            // Confirmar transação
-            await _unitOfWork.CommitTransactionAsync(cancellationToken);
-
-            // Criar resposta de sucesso
-            var response = new CreateCategoryResponse
-            {
-                Id = category.Id,
-                Name = category.Name,
-                Slug = category.Slug,
-                Description = category.Description,
-                ParentId = category.ParentId,
-                IsActive = category.IsActive,
-                DisplayOrder = category.DisplayOrder,
-                CreatedAt = category.CreatedAt
-            };
-
-            return ApiResponse<CreateCategoryResponse>.Ok(response, "Categoria criada com sucesso.");
-        }
-        catch
-        {
-            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-            throw; // Re-lançar a exceção para o GlobalExceptionHandler
-        }
+        return ApiResponse<CreateCategoryResponse>.Ok(response, "Categoria criada com sucesso.");
     }
 }
