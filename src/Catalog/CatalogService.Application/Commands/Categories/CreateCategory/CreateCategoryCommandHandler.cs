@@ -1,7 +1,6 @@
 using System.Linq;
 using BuildingBlocks.Core.Data;
 using BuildingBlocks.Core.Responses;
-using BuildingBlocks.Core.Validations;
 using BuildingBlocks.Core.Exceptions;
 using BuildingBlocks.CQRS.Commands;
 using CatalogService.Domain.Aggregates;
@@ -13,35 +12,27 @@ public class CreateCategoryCommandHandler : ICommandHandler<CreateCategoryComman
 {
     private readonly ICategoryRepository _categoryRepository;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly CreateCategoryCommandValidator _validator;
 
     public CreateCategoryCommandHandler(
         ICategoryRepository categoryRepository, 
-        IUnitOfWork unitOfWork,
-        CreateCategoryCommandValidator validator)
+        IUnitOfWork unitOfWork)
     {
         _categoryRepository = categoryRepository;
         _unitOfWork = unitOfWork;
-        _validator = validator;
     }
 
     public async Task<ApiResponse<CreateCategoryResponse>> HandleAsync(CreateCategoryCommand request, CancellationToken cancellationToken = default)
     {
-        // 1. Validar o comando ANTES de qualquer operação
-        var validationResult = _validator.Validate(request);
-        if (validationResult.HasErrors)
-        {
-            throw new ValidationException(validationResult.Errors.ToList());
-        }
-
-        // 2. Validar se já existe categoria com o mesmo slug
+        // Validação será feita automaticamente pelo ValidationBehavior
+        
+        // 1. Validar se já existe categoria com o mesmo slug
         var existingCategories = await _categoryRepository.FindAsync(c => c.Slug == request.Slug, cancellationToken);
         if (existingCategories.Any())
         {
             throw new DomainException("Já existe uma categoria com este slug.");
         }
 
-        // 3. Iniciar transação explícita
+        // 2. Iniciar transação explícita
         await _unitOfWork.BeginTransactionAsync(cancellationToken);
         
         try

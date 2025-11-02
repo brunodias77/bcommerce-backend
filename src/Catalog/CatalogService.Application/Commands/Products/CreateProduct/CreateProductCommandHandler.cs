@@ -2,7 +2,6 @@ using System.Linq;
 using BuildingBlocks.Core.Data;
 using BuildingBlocks.Core.Exceptions;
 using BuildingBlocks.Core.Responses;
-using BuildingBlocks.Core.Validations;
 using BuildingBlocks.CQRS.Commands;
 using CatalogService.Domain.Aggregates;
 using CatalogService.Domain.Repository;
@@ -14,28 +13,20 @@ public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand,
 {
     private readonly IProductRepository _productRepository;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly CreateProductCommandValidator _validator;
 
     public CreateProductCommandHandler(
         IProductRepository productRepository, 
-        IUnitOfWork unitOfWork,
-        CreateProductCommandValidator validator)
+        IUnitOfWork unitOfWork)
     {
         _productRepository = productRepository;
         _unitOfWork = unitOfWork;
-        _validator = validator;
     }
 
     public async Task<ApiResponse<CreateProductResponse>> HandleAsync(CreateProductCommand request, CancellationToken cancellationToken = default)
     {
-        // 1. Validar o comando ANTES de qualquer operação
-        var validationResult = _validator.Validate(request);
-        if (validationResult.HasErrors)
-        {
-            throw new ValidationException(validationResult.Errors.ToList());
-        }
-
-        // Validar se já existe produto com o mesmo slug
+        // Validação será feita automaticamente pelo ValidationBehavior
+        
+        // 1. Validar se já existe produto com o mesmo slug
         var existingProducts = await _productRepository.FindAsync(p => p.Slug == request.Slug, cancellationToken);
         if (existingProducts.Any())
         {

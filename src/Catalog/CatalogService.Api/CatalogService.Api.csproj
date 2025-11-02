@@ -25,6 +25,7 @@
       <ProjectReference Include="..\CatalogService.Application\CatalogService.Application.csproj" />
       <ProjectReference Include="..\CatalogService.Infrastructure\CatalogService.Infrastructure.csproj" />
       <ProjectReference Include="..\..\BuildingBlocks\BuildingBlocks.Core\BuildingBlocks.Core.csproj" />
+      <ProjectReference Include="..\..\BuildingBlocks\BuildingBlocks.CQRS\BuildingBlocks.CQRS.csproj" />
     </ItemGroup>
 
 </Project>
