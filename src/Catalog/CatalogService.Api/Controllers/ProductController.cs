@@ -41,8 +41,7 @@ public class ProductController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<CreateProductResponse>), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CreateProduct([FromBody] CreateProductCommand command, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("📝 Iniciando criação de produto: {ProductName} com slug: {ProductSlug}", 
-            command.Name, command.Slug);
+        _logger.LogInformation("➡️ [ProductController] Iniciando criação para CreateProductCommand");
 
         // Validar ModelState
         if (!ModelState.IsValid)
@@ -58,8 +57,7 @@ public class ProductController : ControllerBase
         // Enviar command via Mediator
         var result = await _mediator.SendAsync<ApiResponse<CreateProductResponse>>(command, cancellationToken);
 
-        _logger.LogInformation("✅ Produto criado com sucesso: ID {ProductId}, Nome: {ProductName}", 
-            result.Data.Id, result.Data.Name);
+        _logger.LogInformation("✅ [ProductController] Operação concluída com sucesso para CreateProductCommand");
         
         return CreatedAtAction(
             nameof(CreateProduct), 

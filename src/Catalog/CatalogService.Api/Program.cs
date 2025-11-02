@@ -45,9 +45,9 @@ var app = builder.Build();
 
 // Log de inicialização
 var logger = app.Services.GetRequiredService<ILogger<Program>>();
-logger.LogInformation("🚀 Catalog Service iniciado com sucesso!");
-logger.LogInformation("🌍 Ambiente: {Environment}", app.Environment.EnvironmentName);
-logger.LogInformation("📍 Diretório de trabalho: {WorkingDirectory}", Directory.GetCurrentDirectory());
+logger.LogInformation("🚀 [CatalogService] Serviço iniciado com sucesso");
+logger.LogInformation("🌍 [CatalogService] Ambiente: {Environment}", app.Environment.EnvironmentName);
+logger.LogInformation("📍 [CatalogService] Diretório de trabalho: {WorkingDirectory}", Directory.GetCurrentDirectory());
 
 
 
@@ -93,7 +93,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 
-logger.LogInformation("🎯 Catalog Service configurado e pronto para receber requisições!");
+logger.LogInformation("🎯 [CatalogService] Serviço configurado e pronto para receber requisições");
 
 // Configurar evento para logar as URLs reais após a aplicação iniciar
 var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
@@ -106,12 +106,12 @@ lifetime.ApplicationStarted.Register(() =>
     {
         foreach (var address in addressFeature.Addresses)
         {
-            logger.LogInformation("🌐 Catalog API rodando em: {Url}", address);
+            logger.LogInformation("🌐 [CatalogService] API rodando em: {Url}", address);
         }
     }
     else
     {
-        logger.LogInformation("🌐 Catalog API iniciada (endereços não disponíveis)");
+        logger.LogInformation("🌐 [CatalogService] API iniciada (endereços não disponíveis)");
     }
 });
 
@@ -121,7 +121,7 @@ try
 }
 catch (Exception ex)
 {
-    logger.LogCritical(ex, "💥 Erro crítico durante a execução do Catalog Service");
+    logger.LogCritical(ex, "💥 [CatalogService] Erro crítico durante a execução");
     throw;
 }
 finally

@@ -5,6 +5,7 @@ using BuildingBlocks.Core.Exceptions;
 using BuildingBlocks.CQRS.Commands;
 using CatalogService.Domain.Aggregates;
 using CatalogService.Domain.Repository;
+using Microsoft.Extensions.Logging;
 
 namespace CatalogService.Application.Commands.Categories.CreateCategory;
 
@@ -12,17 +13,22 @@ public class CreateCategoryCommandHandler : ICommandHandler<CreateCategoryComman
 {
     private readonly ICategoryRepository _categoryRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ILogger<CreateCategoryCommandHandler> _logger;
 
     public CreateCategoryCommandHandler(
         ICategoryRepository categoryRepository, 
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ILogger<CreateCategoryCommandHandler> logger)
     {
         _categoryRepository = categoryRepository;
         _unitOfWork = unitOfWork;
+        _logger = logger;
     }
 
     public async Task<ApiResponse<CreateCategoryResponse>> HandleAsync(CreateCategoryCommand request, CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation("➡️ [CreateCategoryCommandHandler] Iniciando processamento para CreateCategoryCommand");
+        
         // Validação será feita automaticamente pelo ValidationBehavior
         
         // 1. Validar se já existe categoria com o mesmo slug
@@ -62,6 +68,8 @@ public class CreateCategoryCommandHandler : ICommandHandler<CreateCategoryComman
             CreatedAt = category.CreatedAt
         };
 
+        _logger.LogInformation("✅ [CreateCategoryCommandHandler] Processamento concluído com sucesso para CreateCategoryCommand");
+        
         return ApiResponse<CreateCategoryResponse>.Ok(response, "Categoria criada com sucesso.");
     }
 }

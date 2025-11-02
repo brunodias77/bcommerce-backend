@@ -21,14 +21,20 @@ public static class ApplicationDependencyInjection
 
     private static void AddMediator(this IServiceCollection services, IConfiguration configuration)
     {
-        // Registrar Mediator com assembly da Application
+        // 1. Registrar Mediator
         services.AddMediator(typeof(CreateCategoryCommandHandler).Assembly);
-        
-        // Registrar ValidationBehavior manualmente (executa primeiro)
-        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-        
-        // Registrar TransactionBehavior manualmente (executa após ValidationBehavior)
-        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(TransactionBehavior<,>));
+    
+        // 2. Registrar Behaviors (ordem importa!)
+        // A execução será na ORDEM REVERSA do registro
+    
+    //    services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));      
+        // ↑ Executa PRIMEIRO (entrada e saída do pipeline)
+    
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));   
+        // ↑ Executa SEGUNDO (valida antes de abrir transação)
+    
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(TransactionBehavior<,>));  
+        // ↑ Executa TERCEIRO (envolve apenas o handler)
     }
 
 

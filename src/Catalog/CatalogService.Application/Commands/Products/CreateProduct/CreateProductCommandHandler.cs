@@ -6,6 +6,7 @@ using BuildingBlocks.CQRS.Commands;
 using CatalogService.Domain.Aggregates;
 using CatalogService.Domain.Repository;
 using CatalogService.Domain.ValueObjects;
+using Microsoft.Extensions.Logging;
 
 namespace CatalogService.Application.Commands.Products.CreateProduct;
 
@@ -13,17 +14,22 @@ public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand,
 {
     private readonly IProductRepository _productRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ILogger<CreateProductCommandHandler> _logger;
 
     public CreateProductCommandHandler(
         IProductRepository productRepository, 
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ILogger<CreateProductCommandHandler> logger)
     {
         _productRepository = productRepository;
         _unitOfWork = unitOfWork;
+        _logger = logger;
     }
 
     public async Task<ApiResponse<CreateProductResponse>> HandleAsync(CreateProductCommand request, CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation("➡️ [CreateProductCommandHandler] Iniciando processamento para CreateProductCommand");
+        
         // Validação será feita automaticamente pelo ValidationBehavior
         
         // 1. Validar se já existe produto com o mesmo slug
@@ -114,6 +120,8 @@ public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand,
             UpdatedAt = product.UpdatedAt
         };
 
+        _logger.LogInformation("✅ [CreateProductCommandHandler] Processamento concluído com sucesso para CreateProductCommand");
+        
         return ApiResponse<CreateProductResponse>.Ok(response, "Produto criado com sucesso.");
     }
 }

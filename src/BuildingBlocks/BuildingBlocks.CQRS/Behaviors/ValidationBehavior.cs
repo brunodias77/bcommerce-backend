@@ -43,14 +43,14 @@ public class ValidationBehavior<TRequest, TResponse>
     public async Task<TResponse> HandleAsync(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken = default)
     {
         var requestType = typeof(TRequest).Name;
-        _logger.LogInformation("🔍 ValidationBehavior executando para {RequestType}", requestType);
+        _logger.LogInformation("🔍 [ValidationBehavior] Iniciando validação para {RequestType}", requestType);
         
         // Buscar validator para o tipo de request
         var validator = _serviceProvider.GetService<IValidator<TRequest>>();
         
         if (validator != null)
         {
-            _logger.LogInformation("✅ Validator encontrado para {RequestType}: {ValidatorType}", requestType, validator.GetType().Name);
+            _logger.LogInformation("✅ [ValidationBehavior] Validator encontrado para {RequestType}: {ValidatorType}", requestType, validator.GetType().Name);
             
             // Executar validação
             var validationResult = validator.Validate(request);
@@ -58,19 +58,19 @@ public class ValidationBehavior<TRequest, TResponse>
             // Se há erros, lançar ValidationException
             if (validationResult.HasErrors)
             {
-                _logger.LogWarning("❌ Validação falhou para {RequestType}. Erros: {Errors}", 
+                _logger.LogWarning("❌ [ValidationBehavior] Validação falhou para {RequestType}. Erros: {Errors}", 
                     requestType, string.Join("; ", validationResult.Errors.Select(e => e.Message)));
                 throw new ValidationException(validationResult.Errors);
             }
             
-            _logger.LogInformation("✅ Validação passou para {RequestType}", requestType);
+            _logger.LogInformation("✅ [ValidationBehavior] Validação passou para {RequestType}", requestType);
         }
         else
         {
-            _logger.LogInformation("⚠️ Nenhum validator encontrado para {RequestType}", requestType);
+            _logger.LogInformation("⚠️ [ValidationBehavior] Nenhum validator encontrado para {RequestType}", requestType);
         }
 
-        _logger.LogInformation("➡️ Continuando para o handler de {RequestType}", requestType);
+        _logger.LogInformation("➡️ [ValidationBehavior] Continuando para próximo handler para {RequestType}", requestType);
         
         // Continuar para o próximo behavior ou handler
         return await next();

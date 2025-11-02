@@ -146,4 +146,17 @@ public class Category : AggregateRoot
         
         return this;
     }
+
+    /// <summary>
+    /// Ativa a categoria (desfaz soft delete)
+    /// </summary>
+    /// <returns>Categoria ativada</returns>
+    public Category Activate()
+    {
+        IsActive = true;
+        UpdatedAt = DateTime.UtcNow;
+        Version++;
+        
+        return this;
+    }
 }

@@ -40,7 +40,7 @@ public class UpdateCategoryHandler : ICommandHandler<UpdateCategoryCommand, ApiR
         UpdateCategoryCommand request, 
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Iniciando atualização da categoria {CategoryId}", request.Id);
+        _logger.LogInformation("➡️ [UpdateCategoryHandler] Iniciando processamento para UpdateCategoryCommand");
 
         // 1. Validar o comando
         var validationResult = _validator.Validate(request);
@@ -92,7 +92,7 @@ public class UpdateCategoryHandler : ICommandHandler<UpdateCategoryCommand, ApiR
         // 7. Salvar as mudanças (TransactionBehavior gerencia a transação automaticamente)
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Categoria atualizada com sucesso: {CategoryId}", existingCategory.Id);
+        _logger.LogInformation("✅ [UpdateCategoryHandler] Processamento concluído com sucesso para UpdateCategoryCommand");
 
         // 8. Retornar a resposta
         var response = new UpdateCategoryResponse

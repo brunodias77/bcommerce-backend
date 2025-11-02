@@ -39,7 +39,7 @@ public class DeleteCategoryCommandHandler : ICommandHandler<DeleteCategoryComman
         DeleteCategoryCommand request, 
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Iniciando exclusão da categoria {CategoryId}", request.Id);
+        _logger.LogInformation("➡️ [DeleteCategoryCommandHandler] Iniciando processamento para DeleteCategoryCommand");
 
         // 1. Validar o comando
         var validationResult = _validator.Validate(request);
@@ -88,7 +88,7 @@ public class DeleteCategoryCommandHandler : ICommandHandler<DeleteCategoryComman
         // 8. Salvar as mudanças (TransactionBehavior gerencia a transação automaticamente)
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Categoria deletada com sucesso: {CategoryId}", existingCategory.Id);
+        _logger.LogInformation("✅ [DeleteCategoryCommandHandler] Processamento concluído com sucesso para DeleteCategoryCommand");
 
         // 9. Retornar a resposta
         var response = new DeleteCategoryResponse(

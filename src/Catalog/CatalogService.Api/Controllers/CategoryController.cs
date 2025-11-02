@@ -5,6 +5,7 @@ using BuildingBlocks.Core.Exceptions;
 using CatalogService.Application.Commands.Categories.CreateCategory;
 using CatalogService.Application.Commands.Categories.UpdateCategory;
 using CatalogService.Application.Commands.Categories.DeleteCategory;
+using CatalogService.Application.Commands.Categories.ActivateCategory;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CatalogService.Api.Controllers;
@@ -43,8 +44,7 @@ public class CategoryController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<CreateCategoryResponse>), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryCommand command, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("📝 Iniciando criação de categoria: {CategoryName} com slug: {CategorySlug}", 
-            command.Name, command.Slug);
+        _logger.LogInformation("➡️ [CategoryController] Iniciando criação para CreateCategoryCommand");
 
         // Validar ModelState
         if (!ModelState.IsValid)
@@ -60,8 +60,7 @@ public class CategoryController : ControllerBase
         // Enviar command via Mediator
         var result = await _mediator.SendAsync<ApiResponse<CreateCategoryResponse>>(command, cancellationToken);
 
-        _logger.LogInformation("✅ Categoria criada com sucesso: ID {CategoryId}, Nome: {CategoryName}", 
-            result.Data.Id, result.Data.Name);
+        _logger.LogInformation("✅ [CategoryController] Operação concluída com sucesso para CreateCategoryCommand");
         
         return CreatedAtAction(
             nameof(CreateCategory), 
@@ -89,8 +88,7 @@ public class CategoryController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<UpdateCategoryResponse>), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdateCategory([FromRoute] Guid id, [FromBody] UpdateCategoryCommand command, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("🔄 Iniciando atualização de categoria: ID {CategoryId}, Nome: {CategoryName}", 
-            id, command.Name);
+        _logger.LogInformation("➡️ [CategoryController] Iniciando atualização para UpdateCategoryCommand");
 
         // Garantir que o ID da rota seja usado no comando
         command.Id = id;
@@ -109,8 +107,7 @@ public class CategoryController : ControllerBase
         // Enviar command via Mediator
         var result = await _mediator.SendAsync<ApiResponse<UpdateCategoryResponse>>(command, cancellationToken);
 
-        _logger.LogInformation("✅ Categoria atualizada com sucesso: ID {CategoryId}, Nome: {CategoryName}", 
-            result.Data.Id, result.Data.Name);
+        _logger.LogInformation("✅ [CategoryController] Operação concluída com sucesso para UpdateCategoryCommand");
         
         return Ok(result);
     }
@@ -134,7 +131,7 @@ public class CategoryController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<DeleteCategoryResponse>), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> DeleteCategory([FromRoute] Guid id, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("🗑️ Iniciando exclusão de categoria: ID {CategoryId}", id);
+        _logger.LogInformation("➡️ [CategoryController] Iniciando exclusão para DeleteCategoryCommand");
 
         // Criar o comando
         var command = new DeleteCategoryCommand(id);
@@ -142,7 +139,39 @@ public class CategoryController : ControllerBase
         // Enviar command via Mediator
         var result = await _mediator.SendAsync<ApiResponse<DeleteCategoryResponse>>(command, cancellationToken);
 
-        _logger.LogInformation("✅ Categoria deletada com sucesso: ID {CategoryId}", id);
+        _logger.LogInformation("✅ [CategoryController] Operação concluída com sucesso para DeleteCategoryCommand");
+        
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Ativa uma categoria existente (desfaz soft delete)
+    /// </summary>
+    /// <param name="id">ID da categoria a ser ativada</param>
+    /// <param name="cancellationToken">Token de cancelamento</param>
+    /// <returns>Dados da categoria ativada</returns>
+    /// <response code="200">Categoria ativada com sucesso</response>
+    /// <response code="400">Dados inválidos ou erro de validação</response>
+    /// <response code="404">Categoria não encontrada</response>
+    /// <response code="409">Categoria já está ativa</response>
+    /// <response code="500">Erro interno do servidor</response>
+    [HttpPatch("{id:guid}/activate")]
+    [ProducesResponseType(typeof(ApiResponse<ActivateCategoryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ActivateCategoryResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ActivateCategoryResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ActivateCategoryResponse>), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ApiResponse<ActivateCategoryResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> ActivateCategory([FromRoute] Guid id, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("➡️ [CategoryController] Iniciando ativação para ActivateCategoryCommand");
+
+        // Criar o comando
+        var command = new ActivateCategoryCommand { Id = id };
+
+        // Enviar command via Mediator
+        var result = await _mediator.SendAsync<ApiResponse<ActivateCategoryResponse>>(command, cancellationToken);
+
+        _logger.LogInformation("✅ [CategoryController] Operação concluída com sucesso para ActivateCategoryCommand");
         
         return Ok(result);
     }

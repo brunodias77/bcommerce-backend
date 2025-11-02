@@ -63,14 +63,14 @@ public class HealthController : ControllerBase
                 }
             };
 
-            _logger.LogInformation("Health check executado com sucesso. Status: {Status}", response.Status);
+            _logger.LogInformation("🔍 [HealthController] Verificação executada: {Status}", response.Status);
             
             var statusCode = isHealthy ? StatusCodes.Status200OK : StatusCodes.Status503ServiceUnavailable;
             return StatusCode(statusCode, response);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro durante health check");
+            _logger.LogError(ex, "❌ [HealthController] Erro durante verificação");
             
             var errorResponse = new HealthResponse
             {
@@ -121,12 +121,12 @@ public class HealthController : ControllerBase
 
             var statusCode = isReady ? StatusCodes.Status200OK : StatusCodes.Status503ServiceUnavailable;
             
-            _logger.LogInformation("Readiness check executado: {Status}", response.Status);
+            _logger.LogInformation("🔍 [HealthController] Verificação de prontidão executada: {Status}", response.Status);
             return StatusCode(statusCode, response);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro durante readiness check");
+            _logger.LogError(ex, "❌ [HealthController] Erro durante verificação de prontidão");
             
             var errorResponse = new ReadinessResponse
             {
@@ -167,12 +167,12 @@ public class HealthController : ControllerBase
                 Uptime = GetUptime()
             };
 
-            _logger.LogDebug("Liveness check executado com sucesso");
+            _logger.LogDebug("🔍 [HealthController] Verificação de vitalidade executada com sucesso");
             return Ok(response);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro durante liveness check");
+            _logger.LogError(ex, "❌ [HealthController] Erro durante verificação de vitalidade");
             
             var errorResponse = new LivenessResponse
             {
@@ -215,7 +215,7 @@ public class HealthController : ControllerBase
         {
             stopwatch.Stop();
             
-            _logger.LogWarning(ex, "Falha na conexão com o banco de dados");
+            _logger.LogWarning(ex, "⚠️ [HealthController] Falha na conexão com o banco de dados");
             
             return new DatabaseStatus
             {
