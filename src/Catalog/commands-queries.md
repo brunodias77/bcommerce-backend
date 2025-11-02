@@ -131,12 +131,13 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 
 ---
 
-#### ⏳ UpdateProduct
-**Status**: Pendente  
+#### ✅ UpdateProduct
+**Status**: Implementado  
 **Descrição**: Atualiza informações de um produto existente  
 **Parâmetros**: Similares ao CreateProduct + `Id`  
 **Resposta**: `ApiResponse<UpdateProductResponse>`  
 **Validações**: Similares ao CreateProduct + produto deve existir
+**Endpoint**: `PUT /api/products/{id}`
 
 ---
 

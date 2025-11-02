@@ -101,6 +101,82 @@ public class Product : AggregateRoot
 
     }
     
+    /// <summary>
+    /// Atualiza os dados do produto
+    /// </summary>
+    /// <param name="name">Nome do produto</param>
+    /// <param name="slug">Slug do produto</param>
+    /// <param name="price">Preço do produto</param>
+    /// <param name="stock">Estoque do produto</param>
+    /// <param name="description">Descrição do produto</param>
+    /// <param name="shortDescription">Descrição curta do produto</param>
+    /// <param name="compareAtPrice">Preço de comparação</param>
+    /// <param name="costPrice">Preço de custo</param>
+    /// <param name="lowStockThreshold">Limite de estoque baixo</param>
+    /// <param name="categoryId">ID da categoria</param>
+    /// <param name="metaTitle">Meta título para SEO</param>
+    /// <param name="metaDescription">Meta descrição para SEO</param>
+    /// <param name="weightKg">Peso em quilogramas</param>
+    /// <param name="sku">SKU do produto</param>
+    /// <param name="barcode">Código de barras</param>
+    /// <param name="isActive">Se o produto está ativo</param>
+    /// <param name="isFeatured">Se o produto é destaque</param>
+    /// <returns>Instância atualizada do produto</returns>
+    public Product Update(
+        string name,
+        string slug,
+        Money price,
+        int stock,
+        string? description = null,
+        string? shortDescription = null,
+        Money? compareAtPrice = null,
+        Money? costPrice = null,
+        int lowStockThreshold = 10,
+        Guid? categoryId = null,
+        string? metaTitle = null,
+        string? metaDescription = null,
+        decimal? weightKg = null,
+        string? sku = null,
+        string? barcode = null,
+        bool isActive = true,
+        bool isFeatured = false)
+    {
+        Name = name;
+        Slug = slug;
+        Description = description;
+        ShortDescription = shortDescription;
+        Price = price;
+        CompareAtPrice = compareAtPrice;
+        CostPrice = costPrice;
+        Stock = stock;
+        LowStockThreshold = lowStockThreshold;
+        CategoryId = categoryId;
+        MetaTitle = metaTitle;
+        MetaDescription = metaDescription;
+        WeightKg = weightKg;
+        Sku = sku;
+        Barcode = barcode;
+        IsActive = isActive;
+        IsFeatured = isFeatured;
+        UpdatedAt = DateTime.UtcNow;
+        Version++;
+        
+        return this;
+    }
+    
+    /// <summary>
+    /// Realiza o soft delete do produto
+    /// </summary>
+    /// <returns>Produto com soft delete aplicado</returns>
+    public Product SoftDelete()
+    {
+        DeletedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+        Version++;
+        
+        return this;
+    }
+    
     public override ValidationHandler Validate(ValidationHandler handler)
     {
         // Validar Name
