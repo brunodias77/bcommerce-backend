@@ -225,6 +225,50 @@ public class Product : AggregateRoot
     }
     
     /// <summary>
+    /// Marca o produto como destaque
+    /// </summary>
+    /// <returns>Produto marcado como destaque</returns>
+    public Product Feature()
+    {
+        if (IsFeatured)
+            throw new DomainException("Produto já está marcado como destaque");
+            
+        if (DeletedAt.HasValue)
+            throw new DomainException("Não é possível marcar um produto deletado como destaque");
+        
+        IsFeatured = true;
+        UpdatedAt = DateTime.UtcNow;
+        Version++;
+        
+        // Adicionar evento de domínio
+        AddDomainEvent(new ProductFeaturedEvent(Id, Name, DateTime.UtcNow));
+        
+        return this;
+    }
+    
+    /// <summary>
+    /// Remove o produto dos destaques
+    /// </summary>
+    /// <returns>Produto removido dos destaques</returns>
+    public Product Unfeature()
+    {
+        if (!IsFeatured)
+            throw new DomainException("Produto não está marcado como destaque");
+            
+        if (DeletedAt.HasValue)
+            throw new DomainException("Não é possível alterar status de destaque de um produto deletado");
+        
+        IsFeatured = false;
+        UpdatedAt = DateTime.UtcNow;
+        Version++;
+        
+        // Adicionar evento de domínio
+        AddDomainEvent(new ProductUnfeaturedEvent(Id, Name, DateTime.UtcNow));
+        
+        return this;
+    }
+    
+    /// <summary>
     /// Atualiza o estoque do produto
     /// </summary>
     /// <param name="quantity">Quantidade para a operação</param>

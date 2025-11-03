@@ -55,6 +55,33 @@ public class ProductImage : Entity
         return productImage;
     }
 
+    public ProductImage Update(
+        string url,
+        string? thumbnailUrl = null,
+        string? altText = null,
+        int displayOrder = 0,
+        bool isPrimary = false)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            throw new ArgumentException("Url is required", nameof(url));
+
+        if (displayOrder < 0)
+            throw new ArgumentException("DisplayOrder cannot be negative", nameof(displayOrder));
+
+        Url = url;
+        ThumbnailUrl = thumbnailUrl;
+        AltText = altText;
+        DisplayOrder = displayOrder;
+        IsPrimary = isPrimary;
+        UpdatedAt = DateTime.UtcNow;
+
+        var validationHandler = new ValidationHandler();
+        Validate(validationHandler);
+        validationHandler.ThrowIfHasErrors();
+
+        return this;
+    }
+
     public override ValidationHandler Validate(ValidationHandler handler)
     {
         

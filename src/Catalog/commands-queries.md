@@ -36,8 +36,8 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 
 ---
 
-#### ⏳ UpdateCategory
-**Status**: Pendente  
+#### ✅ UpdateCategory
+**Status**: Implementado  
 **Descrição**: Atualiza informações de uma categoria existente  
 **Parâmetros**:
 - `Id` (Guid, obrigatório): ID da categoria
@@ -57,8 +57,8 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 
 ---
 
-#### ⏳ DeleteCategory
-**Status**: Pendente  
+#### ✅ DeleteCategory
+**Status**: Implementado  
 **Descrição**: Remove uma categoria (soft delete)  
 **Parâmetros**:
 - `Id` (Guid, obrigatório): ID da categoria
@@ -71,8 +71,8 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 
 ---
 
-#### ⏳ ActivateCategory
-**Status**: Pendente  
+#### ✅ ActivateCategory
+**Status**: Implementado  
 **Descrição**: Ativa uma categoria desativada  
 **Parâmetros**:
 - `Id` (Guid, obrigatório): ID da categoria
@@ -141,8 +141,8 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 
 ---
 
-#### ⏳ DeleteProduct
-**Status**: Pendente  
+#### ✅ DeleteProduct
+**Status**: Implementado  
 **Descrição**: Remove um produto (soft delete)  
 **Parâmetros**:
 - `Id` (Guid, obrigatório): ID do produto
@@ -154,8 +154,8 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 
 ---
 
-#### ⏳ ActivateProduct
-**Status**: Pendente  
+#### ✅ ActivateProduct
+**Status**: Implementado  
 **Descrição**: Ativa um produto desativado  
 **Parâmetros**:
 - `Id` (Guid, obrigatório): ID do produto
@@ -164,8 +164,8 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 
 ---
 
-#### ⏳ DeactivateProduct
-**Status**: Pendente  
+#### ✅ DeactivateProduct
+**Status**: Implementado  
 **Descrição**: Desativa um produto ativo  
 **Parâmetros**:
 - `Id` (Guid, obrigatório): ID do produto
@@ -174,8 +174,8 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 
 ---
 
-#### ⏳ UpdateProductStock
-**Status**: Pendente  
+#### ✅ UpdateProductStock
+**Status**: Implementado  
 **Descrição**: Atualiza o estoque de um produto  
 **Parâmetros**:
 - `Id` (Guid, obrigatório): ID do produto
@@ -186,8 +186,8 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 
 ---
 
-#### ⏳ UpdateProductPrice
-**Status**: Pendente  
+#### ✅ UpdateProductPrice
+**Status**: Implementado  
 **Descrição**: Atualiza o preço de um produto  
 **Parâmetros**:
 - `Id` (Guid, obrigatório): ID do produto
@@ -198,8 +198,8 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 
 ---
 
-#### ⏳ FeatureProduct
-**Status**: Pendente  
+#### ✅ FeatureProduct
+**Status**: Implementado  
 **Descrição**: Marca um produto como destaque  
 **Parâmetros**:
 - `Id` (Guid, obrigatório): ID do produto
@@ -208,8 +208,8 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 
 ---
 
-#### ⏳ UnfeatureProduct
-**Status**: Pendente  
+#### ✅ UnfeatureProduct
+**Status**: Implementado  
 **Descrição**: Remove um produto dos destaques  
 **Parâmetros**:
 - `Id` (Guid, obrigatório): ID do produto
@@ -220,8 +220,8 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 
 ### 🖼️ Product Images
 
-#### ⏳ AddProductImage
-**Status**: Pendente  
+#### ✅ AddProductImage
+**Status**: ✅ Implementado  
 **Descrição**: Adiciona uma imagem a um produto  
 **Parâmetros**:
 - `ProductId` (Guid, obrigatório): ID do produto
@@ -235,11 +235,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 
 ---
 
-#### ⏳ UpdateProductImage
-**Status**: Pendente  
+#### ✅ UpdateProductImage
+**Status**: ✅ Implementado  
 **Descrição**: Atualiza informações de uma imagem  
 **Parâmetros**: Similares ao AddProductImage + `Id`  
-**Resposta**: `ApiResponse<ProductImageResponse>`
+**Resposta**: `ApiResponse<UpdateProductImageResponse>`
 
 ---
 

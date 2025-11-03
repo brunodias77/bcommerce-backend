@@ -9,6 +9,10 @@ using CatalogService.Application.Commands.Products.ActivateProduct;
 using CatalogService.Application.Commands.Products.DeactivateProduct;
 using CatalogService.Application.Commands.Products.UpdateProductStock;
 using CatalogService.Application.Commands.Products.UpdateProductPrice;
+using CatalogService.Application.Commands.Products.FeatureProduct;
+using CatalogService.Application.Commands.Products.UnfeatureProduct;
+using CatalogService.Application.Commands.Products.AddProductImage;
+using CatalogService.Application.Commands.Products.UpdateProductImage;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CatalogService.Api.Controllers;
@@ -328,6 +332,185 @@ public class ProductController : ControllerBase
         var result = await _mediator.SendAsync<ApiResponse<UpdateProductPriceResponse>>(command, cancellationToken);
 
         _logger.LogInformation("✅ [ProductController] Operação concluída com sucesso para UpdateProductPriceCommand com ID {ProductId}", id);
+        
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Destaca um produto como em destaque
+    /// </summary>
+    /// <param name="id">ID do produto a ser destacado</param>
+    /// <param name="cancellationToken">Token de cancelamento</param>
+    /// <returns>Dados do produto destacado</returns>
+    /// <response code="200">Produto destacado com sucesso</response>
+    /// <response code="400">Dados inválidos ou erro de validação</response>
+    /// <response code="404">Produto não encontrado</response>
+    /// <response code="409">Produto já está em destaque ou foi deletado</response>
+    /// <response code="500">Erro interno do servidor</response>
+    [HttpPatch("{id:guid}/feature")]
+    [ProducesResponseType(typeof(ApiResponse<FeatureProductResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> FeatureProduct([FromRoute] Guid id, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("➡️ [ProductController] Iniciando FeatureProductCommand para ID {ProductId}", id);
+
+        // Criar command com o ID da rota
+        var command = new FeatureProductCommand { Id = id };
+
+        // Validar ModelState
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => new Error(e.ErrorMessage))
+                .ToList();
+            
+            throw new ValidationException(errors);
+        }
+
+        // Enviar command via Mediator
+        var result = await _mediator.SendAsync<ApiResponse<FeatureProductResponse>>(command, cancellationToken);
+
+        _logger.LogInformation("✅ [ProductController] Operação concluída com sucesso para FeatureProductCommand com ID {ProductId}", id);
+        
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Remove um produto do destaque
+    /// </summary>
+    /// <param name="id">ID do produto a ser removido do destaque</param>
+    /// <param name="cancellationToken">Token de cancelamento</param>
+    /// <returns>Dados do produto removido do destaque</returns>
+    /// <response code="200">Produto removido do destaque com sucesso</response>
+    /// <response code="400">Dados inválidos ou erro de validação</response>
+    /// <response code="404">Produto não encontrado</response>
+    /// <response code="409">Produto não está em destaque ou foi deletado</response>
+    /// <response code="500">Erro interno do servidor</response>
+    [HttpPatch("{id:guid}/unfeature")]
+    [ProducesResponseType(typeof(ApiResponse<UnfeatureProductResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> UnfeatureProduct([FromRoute] Guid id, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("➡️ [ProductController] Iniciando UnfeatureProductCommand para ID {ProductId}", id);
+
+        // Criar command com o ID da rota
+        var command = new UnfeatureProductCommand { Id = id };
+
+        // Validar ModelState
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => new Error(e.ErrorMessage))
+                .ToList();
+            
+            throw new ValidationException(errors);
+        }
+
+        // Enviar command via Mediator
+        var result = await _mediator.SendAsync<ApiResponse<UnfeatureProductResponse>>(command, cancellationToken);
+
+        _logger.LogInformation("✅ [ProductController] Operação concluída com sucesso para UnfeatureProductCommand com ID {ProductId}", id);
+        
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Adiciona uma imagem a um produto
+    /// </summary>
+    /// <param name="id">ID do produto</param>
+    /// <param name="command">Dados da imagem a ser adicionada</param>
+    /// <param name="cancellationToken">Token de cancelamento</param>
+    /// <returns>Dados da imagem adicionada</returns>
+    /// <response code="201">Imagem adicionada com sucesso</response>
+    /// <response code="400">Dados inválidos ou erro de validação</response>
+    /// <response code="404">Produto não encontrado</response>
+    /// <response code="409">Conflito - produto foi deletado</response>
+    /// <response code="500">Erro interno do servidor</response>
+    [HttpPost("{id:guid}/images")]
+    [ProducesResponseType(typeof(ApiResponse<AddProductImageResponse>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> AddProductImage([FromRoute] Guid id, [FromBody] AddProductImageCommand command, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("➡️ [ProductController] Iniciando AddProductImageCommand para ID {ProductId}", id);
+
+        // Definir o ProductId do comando a partir da rota
+        command.ProductId = id;
+
+        // Validar ModelState
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => new Error(e.ErrorMessage))
+                .ToList();
+            
+            throw new ValidationException(errors);
+        }
+
+        // Enviar command via Mediator
+        var result = await _mediator.SendAsync<ApiResponse<AddProductImageResponse>>(command, cancellationToken);
+
+        _logger.LogInformation("✅ [ProductController] Operação concluída com sucesso para AddProductImageCommand com ID {ProductId}", id);
+        
+        return CreatedAtAction(
+            nameof(AddProductImage), 
+            new { id = result.Data.Id }, 
+            result);
+    }
+
+    /// <summary>
+    /// Atualiza uma imagem do produto
+    /// </summary>
+    /// <param name="productId">ID do produto</param>
+    /// <param name="imageId">ID da imagem</param>
+    /// <param name="command">Dados da imagem a ser atualizada</param>
+    /// <param name="cancellationToken">Token de cancelamento</param>
+    /// <returns>Dados da imagem atualizada</returns>
+    /// <response code="200">Imagem atualizada com sucesso</response>
+    /// <response code="400">Dados inválidos ou erro de validação</response>
+    /// <response code="404">Produto ou imagem não encontrada</response>
+    /// <response code="409">Conflito - produto foi deletado</response>
+    /// <response code="500">Erro interno do servidor</response>
+    [HttpPut("{productId:guid}/images/{imageId:guid}")]
+    [ProducesResponseType(typeof(ApiResponse<UpdateProductImageResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> UpdateProductImage([FromRoute] Guid productId, [FromRoute] Guid imageId, [FromBody] UpdateProductImageCommand command, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("➡️ [ProductController] Iniciando UpdateProductImageCommand para ProductId {ProductId} e ImageId {ImageId}", productId, imageId);
+
+        // Definir o ProductId e Id do comando a partir da rota
+        command.ProductId = productId;
+        command.Id = imageId;
+
+        // Validar ModelState
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => new Error(e.ErrorMessage))
+                .ToList();
+            
+            throw new ValidationException(errors);
+        }
+
+        // Enviar command via Mediator
+        var result = await _mediator.SendAsync<ApiResponse<UpdateProductImageResponse>>(command, cancellationToken);
+
+        _logger.LogInformation("✅ [ProductController] Operação concluída com sucesso para UpdateProductImageCommand com ProductId {ProductId} e ImageId {ImageId}", productId, imageId);
         
         return Ok(result);
     }
