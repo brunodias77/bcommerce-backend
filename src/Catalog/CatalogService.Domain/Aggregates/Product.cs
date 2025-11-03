@@ -1,8 +1,11 @@
 using System;
 using System.Text.RegularExpressions;
 using BuildingBlocks.Core.Domain;
+using BuildingBlocks.Core.Exceptions;
 using BuildingBlocks.Core.Validations;
 using CatalogService.Domain.Entities;
+using CatalogService.Domain.Enums;
+using CatalogService.Domain.Events.Products;
 using CatalogService.Domain.ValueObjects;
 
 namespace CatalogService.Domain.Aggregates;
@@ -173,6 +176,120 @@ public class Product : AggregateRoot
         DeletedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
         Version++;
+        
+        return this;
+    }
+    
+    /// <summary>
+    /// Ativa o produto
+    /// </summary>
+    /// <returns>Produto ativado</returns>
+    public Product Activate()
+    {
+        if (IsActive)
+            throw new DomainException("Produto já está ativo");
+            
+        if (DeletedAt.HasValue)
+            throw new DomainException("Não é possível ativar um produto deletado");
+        
+        IsActive = true;
+        UpdatedAt = DateTime.UtcNow;
+        Version++;
+        
+        // Adicionar evento de domínio
+        AddDomainEvent(new ProductActivatedEvent(Id, Name, DateTime.UtcNow));
+        
+        return this;
+    }
+    
+    /// <summary>
+    /// Desativa o produto
+    /// </summary>
+    /// <returns>Produto desativado</returns>
+    public Product Deactivate()
+    {
+        if (!IsActive)
+            throw new DomainException("Produto já está inativo");
+            
+        if (DeletedAt.HasValue)
+            throw new DomainException("Não é possível desativar um produto deletado");
+        
+        IsActive = false;
+        UpdatedAt = DateTime.UtcNow;
+        Version++;
+        
+        // Adicionar evento de domínio
+        AddDomainEvent(new ProductDeactivatedEvent(Id, Name, DateTime.UtcNow));
+        
+        return this;
+    }
+    
+    /// <summary>
+    /// Atualiza o estoque do produto
+    /// </summary>
+    /// <param name="quantity">Quantidade para a operação</param>
+    /// <param name="operation">Tipo de operação (ADD, SUBTRACT, SET)</param>
+    /// <returns>Produto com estoque atualizado</returns>
+    public Product UpdateStock(int quantity, StockOperation operation)
+    {
+        if (DeletedAt.HasValue)
+            throw new DomainException("Não é possível atualizar estoque de um produto deletado");
+        
+        if (quantity < 0)
+            throw new DomainException("Quantidade deve ser maior ou igual a zero");
+        
+        var previousStock = Stock;
+        var newStock = operation switch
+        {
+            StockOperation.ADD => Stock + quantity,
+            StockOperation.SUBTRACT => Stock - quantity,
+            StockOperation.SET => quantity,
+            _ => throw new DomainException("Operação de estoque inválida")
+        };
+        
+        if (newStock < 0)
+            throw new DomainException("Estoque não pode ser negativo");
+        
+        Stock = newStock;
+        UpdatedAt = DateTime.UtcNow;
+        Version++;
+        
+        // Adicionar evento de domínio
+        AddDomainEvent(new ProductStockUpdatedEvent(Id, Name, previousStock, newStock, operation, DateTime.UtcNow));
+        
+        return this;
+    }
+    
+    /// <summary>
+    /// Atualiza o preço do produto
+    /// </summary>
+    /// <param name="price">Novo preço do produto</param>
+    /// <param name="compareAtPrice">Preço de comparação (opcional)</param>
+    /// <returns>Produto com preço atualizado</returns>
+    public Product UpdatePrice(Money price, Money? compareAtPrice = null)
+    {
+        if (DeletedAt.HasValue)
+            throw new DomainException("Não é possível atualizar preço de um produto deletado");
+        
+        if (price == null)
+            throw new DomainException("Preço é obrigatório");
+        
+        if (price.Amount <= 0)
+            throw new DomainException("Preço deve ser maior que zero");
+        
+        if (compareAtPrice != null && compareAtPrice.Amount <= price.Amount)
+            throw new DomainException("Preço de comparação deve ser maior que o preço do produto");
+        
+        var previousPrice = Price;
+        var previousCompareAtPrice = CompareAtPrice;
+        
+        Price = price;
+        CompareAtPrice = compareAtPrice;
+        UpdatedAt = DateTime.UtcNow;
+        Version++;
+        
+        // Adicionar evento de domínio
+        AddDomainEvent(new ProductPriceUpdatedEvent(Id, Name, previousPrice, price, previousCompareAtPrice, compareAtPrice, DateTime.UtcNow));
         
         return this;
     }

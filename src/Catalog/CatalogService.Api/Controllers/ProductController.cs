@@ -5,6 +5,10 @@ using BuildingBlocks.Core.Exceptions;
 using CatalogService.Application.Commands.Products.CreateProduct;
 using CatalogService.Application.Commands.Products.UpdateProduct;
 using CatalogService.Application.Commands.Products.DeleteProduct;
+using CatalogService.Application.Commands.Products.ActivateProduct;
+using CatalogService.Application.Commands.Products.DeactivateProduct;
+using CatalogService.Application.Commands.Products.UpdateProductStock;
+using CatalogService.Application.Commands.Products.UpdateProductPrice;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CatalogService.Api.Controllers;
@@ -150,6 +154,180 @@ public class ProductController : ControllerBase
         var result = await _mediator.SendAsync<ApiResponse<bool>>(command, cancellationToken);
 
         _logger.LogInformation("✅ [ProductController] Operação concluída com sucesso para DeleteProductCommand com ID {ProductId}", id);
+        
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Ativa um produto
+    /// </summary>
+    /// <param name="id">ID do produto a ser ativado</param>
+    /// <param name="cancellationToken">Token de cancelamento</param>
+    /// <returns>Dados do produto ativado</returns>
+    /// <response code="200">Produto ativado com sucesso</response>
+    /// <response code="400">Dados inválidos ou erro de validação</response>
+    /// <response code="404">Produto não encontrado</response>
+    /// <response code="409">Produto já está ativo</response>
+    /// <response code="500">Erro interno do servidor</response>
+    [HttpPatch("{id:guid}/activate")]
+    [ProducesResponseType(typeof(ApiResponse<ActivateProductResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ActivateProductResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ActivateProductResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ActivateProductResponse>), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ApiResponse<ActivateProductResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> ActivateProduct([FromRoute] Guid id, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("➡️ [ProductController] Iniciando ativação para ActivateProductCommand com ID {ProductId}", id);
+
+        // Criar command com o ID da rota
+        var command = new ActivateProductCommand { ProductId = id };
+
+        // Validar ModelState
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => new Error(e.ErrorMessage))
+                .ToList();
+            
+            throw new ValidationException(errors);
+        }
+
+        // Enviar command via Mediator
+        var result = await _mediator.SendAsync<ApiResponse<ActivateProductResponse>>(command, cancellationToken);
+
+        _logger.LogInformation("✅ [ProductController] Operação concluída com sucesso para ActivateProductCommand com ID {ProductId}", id);
+        
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Desativa um produto
+    /// </summary>
+    /// <param name="id">ID do produto a ser desativado</param>
+    /// <param name="cancellationToken">Token de cancelamento</param>
+    /// <returns>Resposta da operação de desativação do produto</returns>
+    /// <response code="200">Produto desativado com sucesso</response>
+    /// <response code="400">Dados inválidos fornecidos</response>
+    /// <response code="404">Produto não encontrado</response>
+    /// <response code="409">Conflito - produto já está desativado ou foi deletado</response>
+    /// <response code="500">Erro interno do servidor</response>
+    [HttpPatch("{id:guid}/deactivate")]
+    [ProducesResponseType(typeof(ApiResponse<DeactivateProductResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> DeactivateProduct([FromRoute] Guid id, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("🔄 [ProductController] Iniciando DeactivateProductCommand para ID {ProductId}", id);
+
+        // Criar command com o ID da rota
+        var command = new DeactivateProductCommand { ProductId = id };
+
+        // Validar ModelState
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => new Error(e.ErrorMessage))
+                .ToList();
+            
+            throw new ValidationException(errors);
+        }
+
+        // Enviar command via Mediator
+        var result = await _mediator.SendAsync<ApiResponse<DeactivateProductResponse>>(command, cancellationToken);
+
+        _logger.LogInformation("✅ [ProductController] Operação concluída com sucesso para DeactivateProductCommand com ID {ProductId}", id);
+        
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Atualiza o estoque de um produto
+    /// </summary>
+    /// <param name="id">ID do produto a ter o estoque atualizado</param>
+    /// <param name="command">Dados da atualização de estoque</param>
+    /// <param name="cancellationToken">Token de cancelamento</param>
+    /// <returns>Dados do produto com estoque atualizado</returns>
+    /// <response code="200">Estoque do produto atualizado com sucesso</response>
+    /// <response code="400">Dados inválidos ou erro de validação</response>
+    /// <response code="404">Produto não encontrado</response>
+    /// <response code="409">Conflito - produto foi deletado ou operação inválida</response>
+    /// <response code="500">Erro interno do servidor</response>
+    [HttpPatch("{id:guid}/stock")]
+    [ProducesResponseType(typeof(ApiResponse<UpdateProductStockResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> UpdateProductStock([FromRoute] Guid id, [FromBody] UpdateProductStockCommand command, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("➡️ [ProductController] Iniciando UpdateProductStockCommand para ID {ProductId}", id);
+
+        // Definir o ID do comando a partir da rota
+        command.Id = id;
+
+        // Validar ModelState
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => new Error(e.ErrorMessage))
+                .ToList();
+            
+            throw new ValidationException(errors);
+        }
+
+        // Enviar command via Mediator
+        var result = await _mediator.SendAsync<ApiResponse<UpdateProductStockResponse>>(command, cancellationToken);
+
+        _logger.LogInformation("✅ [ProductController] Operação concluída com sucesso para UpdateProductStockCommand com ID {ProductId}", id);
+        
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Atualiza o preço de um produto
+    /// </summary>
+    /// <param name="id">ID do produto a ter o preço atualizado</param>
+    /// <param name="command">Dados da atualização de preço</param>
+    /// <param name="cancellationToken">Token de cancelamento</param>
+    /// <returns>Dados do produto com preço atualizado</returns>
+    /// <response code="200">Preço do produto atualizado com sucesso</response>
+    /// <response code="400">Dados inválidos ou erro de validação</response>
+    /// <response code="404">Produto não encontrado</response>
+    /// <response code="409">Conflito - produto foi deletado ou operação inválida</response>
+    /// <response code="500">Erro interno do servidor</response>
+    [HttpPatch("{id:guid}/price")]
+    [ProducesResponseType(typeof(ApiResponse<UpdateProductPriceResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> UpdateProductPrice([FromRoute] Guid id, [FromBody] UpdateProductPriceCommand command, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("➡️ [ProductController] Iniciando UpdateProductPriceCommand para ID {ProductId}", id);
+
+        // Definir o ID do comando a partir da rota
+        command.Id = id;
+
+        // Validar ModelState
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => new Error(e.ErrorMessage))
+                .ToList();
+            
+            throw new ValidationException(errors);
+        }
+
+        // Enviar command via Mediator
+        var result = await _mediator.SendAsync<ApiResponse<UpdateProductPriceResponse>>(command, cancellationToken);
+
+        _logger.LogInformation("✅ [ProductController] Operação concluída com sucesso para UpdateProductPriceCommand com ID {ProductId}", id);
         
         return Ok(result);
     }
