@@ -6,7 +6,7 @@ using CatalogService.Domain.Entities;
 using CatalogService.Domain.Repository;
 using Microsoft.Extensions.Logging;
 
-namespace CatalogService.Application.Commands.Products.AddProductImage;
+namespace CatalogService.Application.Commands.ProductImages.AddProductImage;
 
 public class AddProductImageCommandHandler : ICommandHandler<AddProductImageCommand, ApiResponse<AddProductImageResponse>>
 {

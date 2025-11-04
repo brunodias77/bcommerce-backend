@@ -1,4 +1,4 @@
-namespace CatalogService.Application.Commands.Products.UpdateProductImage;
+namespace CatalogService.Application.Commands.ProductImages.UpdateProductImage;
 
 public class UpdateProductImageResponse
 {

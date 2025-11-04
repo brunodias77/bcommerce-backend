@@ -5,7 +5,7 @@ using BuildingBlocks.CQRS.Commands;
 using CatalogService.Domain.Repository;
 using Microsoft.Extensions.Logging;
 
-namespace CatalogService.Application.Commands.Products.UpdateProductImage;
+namespace CatalogService.Application.Commands.ProductImages.UpdateProductImage;
 
 public class UpdateProductImageCommandHandler : ICommandHandler<UpdateProductImageCommand, ApiResponse<UpdateProductImageResponse>>
 {

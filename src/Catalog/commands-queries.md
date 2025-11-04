@@ -16,9 +16,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ### 📂 Categories
 
 #### ✅ CreateCategory
+
 **Status**: Implementado  
 **Descrição**: Cria uma nova categoria no catálogo  
 **Parâmetros**:
+
 - `Name` (string, obrigatório): Nome da categoria
 - `Slug` (string, obrigatório): URL amigável única
 - `Description` (string, opcional): Descrição da categoria
@@ -29,6 +31,7 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 
 **Resposta**: `ApiResponse<CreateCategoryResponse>`  
 **Validações**:
+
 - Nome obrigatório (máx. 200 caracteres)
 - Slug único e válido (formato: a-z, 0-9, hífens)
 - Descrição opcional (máx. 1000 caracteres)
@@ -37,9 +40,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ✅ UpdateCategory
+
 **Status**: Implementado  
 **Descrição**: Atualiza informações de uma categoria existente  
 **Parâmetros**:
+
 - `Id` (Guid, obrigatório): ID da categoria
 - `Name` (string, obrigatório): Nome da categoria
 - `Slug` (string, obrigatório): URL amigável única
@@ -50,6 +55,7 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 
 **Resposta**: `ApiResponse<UpdateCategoryResponse>`  
 **Validações**:
+
 - Categoria deve existir
 - Slug único (exceto para a própria categoria)
 - Não pode ser pai de si mesma
@@ -58,13 +64,16 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ✅ DeleteCategory
+
 **Status**: Implementado  
 **Descrição**: Remove uma categoria (soft delete)  
 **Parâmetros**:
+
 - `Id` (Guid, obrigatório): ID da categoria
 
 **Resposta**: `ApiResponse<bool>`  
 **Validações**:
+
 - Categoria deve existir
 - Não pode ter produtos associados
 - Não pode ter subcategorias ativas
@@ -72,26 +81,32 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ✅ ActivateCategory
+
 **Status**: Implementado  
 **Descrição**: Ativa uma categoria desativada  
 **Parâmetros**:
+
 - `Id` (Guid, obrigatório): ID da categoria
 
 **Resposta**: `ApiResponse<bool>`  
 **Validações**:
+
 - Categoria deve existir
 - Categoria deve estar inativa
 
 ---
 
 #### ⏳ DeactivateCategory
+
 **Status**: Pendente  
 **Descrição**: Desativa uma categoria ativa  
 **Parâmetros**:
+
 - `Id` (Guid, obrigatório): ID da categoria
 
 **Resposta**: `ApiResponse<bool>`  
 **Validações**:
+
 - Categoria deve existir
 - Categoria deve estar ativa
 
@@ -100,9 +115,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ### 🛍️ Products
 
 #### ✅ CreateProduct
+
 **Status**: Implementado  
 **Descrição**: Cria um novo produto no catálogo  
 **Parâmetros**:
+
 - `Name` (string, obrigatório): Nome do produto
 - `Slug` (string, obrigatório): URL amigável única
 - `Description` (string, opcional): Descrição completa
@@ -124,6 +141,7 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 
 **Resposta**: `ApiResponse<CreateProductResponse>`  
 **Validações**:
+
 - Nome obrigatório (máx. 200 caracteres)
 - Slug único e válido
 - Preço maior que zero
@@ -132,6 +150,7 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ✅ UpdateProduct
+
 **Status**: Implementado  
 **Descrição**: Atualiza informações de um produto existente  
 **Parâmetros**: Similares ao CreateProduct + `Id`  
@@ -142,22 +161,27 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ✅ DeleteProduct
+
 **Status**: Implementado  
 **Descrição**: Remove um produto (soft delete)  
 **Parâmetros**:
+
 - `Id` (Guid, obrigatório): ID do produto
 
 **Resposta**: `ApiResponse<bool>`  
 **Validações**:
+
 - Produto deve existir
 - Não pode ter pedidos pendentes
 
 ---
 
 #### ✅ ActivateProduct
+
 **Status**: Implementado  
 **Descrição**: Ativa um produto desativado  
 **Parâmetros**:
+
 - `Id` (Guid, obrigatório): ID do produto
 
 **Resposta**: `ApiResponse<bool>`
@@ -165,9 +189,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ✅ DeactivateProduct
+
 **Status**: Implementado  
 **Descrição**: Desativa um produto ativo  
 **Parâmetros**:
+
 - `Id` (Guid, obrigatório): ID do produto
 
 **Resposta**: `ApiResponse<bool>`
@@ -175,9 +201,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ✅ UpdateProductStock
+
 **Status**: Implementado  
 **Descrição**: Atualiza o estoque de um produto  
 **Parâmetros**:
+
 - `Id` (Guid, obrigatório): ID do produto
 - `Stock` (int, obrigatório): Nova quantidade
 - `Operation` (enum): ADD, SUBTRACT, SET
@@ -187,9 +215,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ✅ UpdateProductPrice
+
 **Status**: Implementado  
 **Descrição**: Atualiza o preço de um produto  
 **Parâmetros**:
+
 - `Id` (Guid, obrigatório): ID do produto
 - `Price` (decimal, obrigatório): Novo preço
 - `CompareAtPrice` (decimal?, opcional): Preço de comparação
@@ -199,9 +229,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ✅ FeatureProduct
+
 **Status**: Implementado  
 **Descrição**: Marca um produto como destaque  
 **Parâmetros**:
+
 - `Id` (Guid, obrigatório): ID do produto
 
 **Resposta**: `ApiResponse<bool>`
@@ -209,9 +241,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ✅ UnfeatureProduct
+
 **Status**: Implementado  
 **Descrição**: Remove um produto dos destaques  
 **Parâmetros**:
+
 - `Id` (Guid, obrigatório): ID do produto
 
 **Resposta**: `ApiResponse<bool>`
@@ -221,9 +255,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ### 🖼️ Product Images
 
 #### ✅ AddProductImage
+
 **Status**: ✅ Implementado  
 **Descrição**: Adiciona uma imagem a um produto  
 **Parâmetros**:
+
 - `ProductId` (Guid, obrigatório): ID do produto
 - `Url` (string, obrigatório): URL da imagem
 - `ThumbnailUrl` (string, opcional): URL da miniatura
@@ -236,6 +272,7 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ✅ UpdateProductImage
+
 **Status**: ✅ Implementado  
 **Descrição**: Atualiza informações de uma imagem  
 **Parâmetros**: Similares ao AddProductImage + `Id`  
@@ -244,9 +281,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ DeleteProductImage
-**Status**: Pendente  
+
+**Status**: ✅ Implementado  
 **Descrição**: Remove uma imagem do produto  
 **Parâmetros**:
+
 - `Id` (Guid, obrigatório): ID da imagem
 
 **Resposta**: `ApiResponse<bool>`
@@ -254,9 +293,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ SetPrimaryProductImage
-**Status**: Pendente  
+
+**Status**: ✅ Implementado    
 **Descrição**: Define uma imagem como principal  
 **Parâmetros**:
+
 - `ProductId` (Guid, obrigatório): ID do produto
 - `ImageId` (Guid, obrigatório): ID da imagem
 
@@ -265,9 +306,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ ReorderProductImages
-**Status**: Pendente  
+
+**Status**: ✅ Implementado   
 **Descrição**: Reordena as imagens de um produto  
 **Parâmetros**:
+
 - `ProductId` (Guid, obrigatório): ID do produto
 - `ImageOrders` (List<ImageOrder>): Lista com ID e nova ordem
 
@@ -278,9 +321,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ### ⭐ Product Reviews
 
 #### ⏳ CreateProductReview
-**Status**: Pendente  
+
+**Status**:  ✅ Implementado   
 **Descrição**: Cria uma avaliação para um produto  
 **Parâmetros**:
+
 - `ProductId` (Guid, obrigatório): ID do produto
 - `UserId` (Guid, obrigatório): ID do usuário
 - `Rating` (int, obrigatório): Nota de 1 a 5
@@ -293,7 +338,8 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ UpdateProductReview
-**Status**: Pendente  
+
+**Status**: ✅ Implementado  
 **Descrição**: Atualiza uma avaliação existente  
 **Parâmetros**: Similares ao CreateProductReview + `Id`  
 **Resposta**: `ApiResponse<ProductReviewResponse>`
@@ -301,9 +347,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ DeleteProductReview
-**Status**: Pendente  
+
+**Status**: ✅ Implementado    
 **Descrição**: Remove uma avaliação  
 **Parâmetros**:
+
 - `Id` (Guid, obrigatório): ID da avaliação
 
 **Resposta**: `ApiResponse<bool>`
@@ -311,9 +359,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ ApproveProductReview
+
 **Status**: Pendente  
 **Descrição**: Aprova uma avaliação para publicação  
 **Parâmetros**:
+
 - `Id` (Guid, obrigatório): ID da avaliação
 - `ModeratorId` (Guid, obrigatório): ID do moderador
 
@@ -322,9 +372,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ RejectProductReview
+
 **Status**: Pendente  
 **Descrição**: Rejeita uma avaliação  
 **Parâmetros**:
+
 - `Id` (Guid, obrigatório): ID da avaliação
 - `ModeratorId` (Guid, obrigatório): ID do moderador
 - `Reason` (string, opcional): Motivo da rejeição
@@ -334,9 +386,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ FeatureProductReview
+
 **Status**: Pendente  
 **Descrição**: Marca uma avaliação como destaque  
 **Parâmetros**:
+
 - `Id` (Guid, obrigatório): ID da avaliação
 
 **Resposta**: `ApiResponse<bool>`
@@ -344,9 +398,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ UnfeatureProductReview
+
 **Status**: Pendente  
 **Descrição**: Remove uma avaliação dos destaques  
 **Parâmetros**:
+
 - `Id` (Guid, obrigatório): ID da avaliação
 
 **Resposta**: `ApiResponse<bool>`
@@ -356,9 +412,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ### ❤️ Favorite Products
 
 #### ⏳ AddProductToFavorites
+
 **Status**: Pendente  
 **Descrição**: Adiciona um produto aos favoritos do usuário  
 **Parâmetros**:
+
 - `UserId` (Guid, obrigatório): ID do usuário
 - `ProductId` (Guid, obrigatório): ID do produto
 
@@ -367,9 +425,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ RemoveProductFromFavorites
+
 **Status**: Pendente  
 **Descrição**: Remove um produto dos favoritos  
 **Parâmetros**:
+
 - `UserId` (Guid, obrigatório): ID do usuário
 - `ProductId` (Guid, obrigatório): ID do produto
 
@@ -380,9 +440,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ### 👍 Review Votes
 
 #### ⏳ VoteReviewHelpful
+
 **Status**: Pendente  
 **Descrição**: Marca uma avaliação como útil  
 **Parâmetros**:
+
 - `ReviewId` (Guid, obrigatório): ID da avaliação
 - `UserId` (Guid, obrigatório): ID do usuário
 
@@ -391,9 +453,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ VoteReviewUnhelpful
+
 **Status**: Pendente  
 **Descrição**: Marca uma avaliação como não útil  
 **Parâmetros**:
+
 - `ReviewId` (Guid, obrigatório): ID da avaliação
 - `UserId` (Guid, obrigatório): ID do usuário
 
@@ -402,9 +466,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ RemoveReviewVote
+
 **Status**: Pendente  
 **Descrição**: Remove um voto de uma avaliação  
 **Parâmetros**:
+
 - `ReviewId` (Guid, obrigatório): ID da avaliação
 - `UserId` (Guid, obrigatório): ID do usuário
 
@@ -417,9 +483,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ### 📂 Categories
 
 #### ⏳ GetCategoryById
+
 **Status**: Pendente  
 **Descrição**: Busca uma categoria por ID  
 **Parâmetros**:
+
 - `Id` (Guid, obrigatório): ID da categoria
 
 **Resposta**: `ApiResponse<CategoryResponse>`
@@ -427,9 +495,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ GetCategoriesByParent
+
 **Status**: Pendente  
 **Descrição**: Busca subcategorias de uma categoria pai  
 **Parâmetros**:
+
 - `ParentId` (Guid?, opcional): ID da categoria pai (null = raiz)
 - `IncludeInactive` (bool): Incluir inativas (padrão: false)
 
@@ -438,9 +508,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ GetAllCategories
+
 **Status**: Pendente  
 **Descrição**: Lista todas as categorias com paginação  
 **Parâmetros**:
+
 - `Page` (int): Página (padrão: 1)
 - `PageSize` (int): Itens por página (padrão: 20)
 - `IncludeInactive` (bool): Incluir inativas
@@ -450,6 +522,7 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ GetActiveCategoriesTree
+
 **Status**: Pendente  
 **Descrição**: Retorna árvore hierárquica de categorias ativas  
 **Parâmetros**: Nenhum  
@@ -458,9 +531,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ SearchCategories
+
 **Status**: Pendente  
 **Descrição**: Busca categorias por termo  
 **Parâmetros**:
+
 - `SearchTerm` (string, obrigatório): Termo de busca
 - `Page` (int): Página
 - `PageSize` (int): Itens por página
@@ -472,9 +547,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ### 🛍️ Products
 
 #### ⏳ GetProductById
+
 **Status**: Pendente  
 **Descrição**: Busca um produto por ID  
 **Parâmetros**:
+
 - `Id` (Guid, obrigatório): ID do produto
 - `IncludeImages` (bool): Incluir imagens
 - `IncludeReviews` (bool): Incluir avaliações
@@ -484,9 +561,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ GetProductBySlug
+
 **Status**: Pendente  
 **Descrição**: Busca um produto por slug  
 **Parâmetros**:
+
 - `Slug` (string, obrigatório): Slug do produto
 - `IncludeImages` (bool): Incluir imagens
 - `IncludeReviews` (bool): Incluir avaliações
@@ -496,9 +575,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ GetProductsByCategory
+
 **Status**: Pendente  
 **Descrição**: Lista produtos de uma categoria  
 **Parâmetros**:
+
 - `CategoryId` (Guid, obrigatório): ID da categoria
 - `Page` (int): Página
 - `PageSize` (int): Itens por página
@@ -510,9 +591,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ GetFeaturedProducts
+
 **Status**: Pendente  
 **Descrição**: Lista produtos em destaque  
 **Parâmetros**:
+
 - `Limit` (int): Quantidade máxima (padrão: 10)
 
 **Resposta**: `ApiResponse<List<ProductSummaryResponse>>`
@@ -520,9 +603,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ GetActiveProducts
+
 **Status**: Pendente  
 **Descrição**: Lista produtos ativos com paginação  
 **Parâmetros**:
+
 - `Page` (int): Página
 - `PageSize` (int): Itens por página
 - `SortBy` (enum): Ordenação
@@ -533,9 +618,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ SearchProducts
+
 **Status**: Pendente  
 **Descrição**: Busca produtos por termo  
 **Parâmetros**:
+
 - `SearchTerm` (string, obrigatório): Termo de busca
 - `CategoryId` (Guid?, opcional): Filtrar por categoria
 - `MinPrice` (decimal?, opcional): Preço mínimo
@@ -548,9 +635,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ GetProductsWithLowStock
+
 **Status**: Pendente  
 **Descrição**: Lista produtos com estoque baixo  
 **Parâmetros**:
+
 - `Page` (int): Página
 - `PageSize` (int): Itens por página
 
@@ -559,9 +648,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ GetProductsByPriceRange
+
 **Status**: Pendente  
 **Descrição**: Lista produtos por faixa de preço  
 **Parâmetros**:
+
 - `MinPrice` (decimal, obrigatório): Preço mínimo
 - `MaxPrice` (decimal, obrigatório): Preço máximo
 - `Page` (int): Página
@@ -574,9 +665,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ### 🖼️ Product Images
 
 #### ⏳ GetProductImages
+
 **Status**: Pendente  
 **Descrição**: Lista imagens de um produto  
 **Parâmetros**:
+
 - `ProductId` (Guid, obrigatório): ID do produto
 
 **Resposta**: `ApiResponse<List<ProductImageResponse>>`
@@ -584,9 +677,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ GetPrimaryProductImage
+
 **Status**: Pendente  
 **Descrição**: Busca a imagem principal de um produto  
 **Parâmetros**:
+
 - `ProductId` (Guid, obrigatório): ID do produto
 
 **Resposta**: `ApiResponse<ProductImageResponse>`
@@ -596,9 +691,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ### ⭐ Product Reviews
 
 #### ⏳ GetProductReviews
+
 **Status**: Pendente  
 **Descrição**: Lista avaliações de um produto  
 **Parâmetros**:
+
 - `ProductId` (Guid, obrigatório): ID do produto
 - `Page` (int): Página
 - `PageSize` (int): Itens por página
@@ -609,9 +706,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ GetReviewById
+
 **Status**: Pendente  
 **Descrição**: Busca uma avaliação por ID  
 **Parâmetros**:
+
 - `Id` (Guid, obrigatório): ID da avaliação
 
 **Resposta**: `ApiResponse<ProductReviewDetailResponse>`
@@ -619,9 +718,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ GetReviewsByUser
+
 **Status**: Pendente  
 **Descrição**: Lista avaliações de um usuário  
 **Parâmetros**:
+
 - `UserId` (Guid, obrigatório): ID do usuário
 - `Page` (int): Página
 - `PageSize` (int): Itens por página
@@ -631,9 +732,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ GetFeaturedReviews
+
 **Status**: Pendente  
 **Descrição**: Lista avaliações em destaque  
 **Parâmetros**:
+
 - `Limit` (int): Quantidade máxima (padrão: 5)
 
 **Resposta**: `ApiResponse<List<ProductReviewResponse>>`
@@ -641,9 +744,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ GetPendingReviews
+
 **Status**: Pendente  
 **Descrição**: Lista avaliações pendentes de moderação  
 **Parâmetros**:
+
 - `Page` (int): Página
 - `PageSize` (int): Itens por página
 
@@ -654,9 +759,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ### ❤️ Favorite Products
 
 #### ⏳ GetUserFavoriteProducts
+
 **Status**: Pendente  
 **Descrição**: Lista produtos favoritos de um usuário  
 **Parâmetros**:
+
 - `UserId` (Guid, obrigatório): ID do usuário
 - `Page` (int): Página
 - `PageSize` (int): Itens por página
@@ -666,9 +773,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ CheckIfProductIsFavorited
+
 **Status**: Pendente  
 **Descrição**: Verifica se um produto está nos favoritos  
 **Parâmetros**:
+
 - `UserId` (Guid, obrigatório): ID do usuário
 - `ProductId` (Guid, obrigatório): ID do produto
 
@@ -679,9 +788,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ### 📊 Statistics/Analytics
 
 #### ⏳ GetProductViewCount
+
 **Status**: Pendente  
 **Descrição**: Retorna contagem de visualizações de um produto  
 **Parâmetros**:
+
 - `ProductId` (Guid, obrigatório): ID do produto
 
 **Resposta**: `ApiResponse<int>`
@@ -689,9 +800,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ GetProductFavoriteCount
+
 **Status**: Pendente  
 **Descrição**: Retorna contagem de favoritos de um produto  
 **Parâmetros**:
+
 - `ProductId` (Guid, obrigatório): ID do produto
 
 **Resposta**: `ApiResponse<int>`
@@ -699,9 +812,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ GetProductReviewStats
+
 **Status**: Pendente  
 **Descrição**: Retorna estatísticas de avaliações de um produto  
 **Parâmetros**:
+
 - `ProductId` (Guid, obrigatório): ID do produto
 
 **Resposta**: `ApiResponse<ProductReviewStatsResponse>`
@@ -709,9 +824,11 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 ---
 
 #### ⏳ GetCategoryProductCount
+
 **Status**: Pendente  
 **Descrição**: Retorna contagem de produtos por categoria  
 **Parâmetros**:
+
 - `CategoryId` (Guid, obrigatório): ID da categoria
 - `IncludeSubcategories` (bool): Incluir subcategorias
 
@@ -763,6 +880,7 @@ CatalogService.Application/
 ### 🚀 Prioridades de Implementação
 
 **Fase 1 - Core**:
+
 - ✅ CreateCategory
 - ✅ CreateProduct
 - GetProductById
@@ -770,23 +888,26 @@ CatalogService.Application/
 - GetCategoryById
 
 **Fase 2 - CRUD Completo**:
+
 - UpdateProduct
 - UpdateCategory
 - DeleteProduct
 - DeleteCategory
 
 **Fase 3 - Features Avançadas**:
+
 - SearchProducts
 - ProductImages
 - ProductReviews
 - FavoriteProducts
 
 **Fase 4 - Analytics**:
+
 - Statistics queries
 - Review votes
 - Advanced filtering
 
 ---
 
-*Documento atualizado em: 01/11/2024*  
-*Versão: 1.0*
+_Documento atualizado em: 01/11/2024_  
+_Versão: 1.0_

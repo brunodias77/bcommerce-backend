@@ -1,7 +1,7 @@
 using BuildingBlocks.Core.Validations;
 using BuildingBlocks.CQRS.Validations;
 
-namespace CatalogService.Application.Commands.Products.AddProductImage;
+namespace CatalogService.Application.Commands.ProductImages.AddProductImage;
 
 public class AddProductImageValidator : IValidator<AddProductImageCommand>
 {

@@ -1,6 +1,9 @@
-namespace CatalogService.Application.Commands.Products.AddProductImage;
+using BuildingBlocks.Core.Responses;
+using BuildingBlocks.CQRS.Commands;
 
-public class AddProductImageResponse
+namespace CatalogService.Application.Commands.ProductImages.UpdateProductImage;
+
+public class UpdateProductImageCommand : ICommand<ApiResponse<UpdateProductImageResponse>>
 {
     public Guid Id { get; set; }
     public Guid ProductId { get; set; }
@@ -9,5 +12,4 @@ public class AddProductImageResponse
     public string? AltText { get; set; }
     public int DisplayOrder { get; set; }
     public bool IsPrimary { get; set; }
-    public DateTime CreatedAt { get; set; }
 }

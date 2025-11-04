@@ -11,4 +11,10 @@
       <ProjectReference Include="..\CatalogService.Domain\CatalogService.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Commands\ProductImages\" />
+      <Folder Include="Commands\ProductReviews\" />
+      <Folder Include="Commands\ProductReviews\ApproveProductReview\" />
+    </ItemGroup>
+
 </Project>

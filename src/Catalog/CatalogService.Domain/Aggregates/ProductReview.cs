@@ -1,4 +1,5 @@
 using BuildingBlocks.Core.Domain;
+using BuildingBlocks.Core.Exceptions;
 using BuildingBlocks.Core.Validations;
 using CatalogService.Domain.Entities;
 using CatalogService.Domain.ValueObjects;
@@ -113,5 +114,78 @@ public class ProductReview : AggregateRoot
             handler.Add("Não é possível ter um moderador sem data de moderação");
         
         return handler;
+    }
+    
+    /// <summary>
+    /// Atualiza os dados da avaliação
+    /// </summary>
+    /// <param name="rating">Nova avaliação</param>
+    /// <param name="title">Novo título (opcional)</param>
+    /// <param name="comment">Novo comentário (opcional)</param>
+    /// <param name="isVerifiedPurchase">Se é uma compra verificada</param>
+    /// <returns>Avaliação atualizada</returns>
+    public ProductReview Update(
+        Rating rating,
+        string? title = null,
+        string? comment = null,
+        bool isVerifiedPurchase = false)
+    {
+        if (DeletedAt.HasValue)
+            throw new DomainException("Não é possível atualizar uma avaliação deletada");
+        
+        if (rating == null)
+            throw new ArgumentNullException(nameof(rating), "Avaliação é obrigatória");
+        
+        Rating = rating;
+        Title = title;
+        Comment = comment;
+        IsVerifiedPurchase = isVerifiedPurchase;
+        Version++;
+        UpdatedAt = DateTime.UtcNow;
+        
+        return this;
+    }
+    
+    /// <summary>
+    /// Realiza o soft delete da avaliação
+    /// </summary>
+    /// <returns>Avaliação com soft delete aplicado</returns>
+    public ProductReview SoftDelete()
+    {
+        if (DeletedAt.HasValue)
+            throw new DomainException("Avaliação já foi deletada");
+        
+        DeletedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+        Version++;
+        
+        return this;
+    }
+
+    /// <summary>
+    /// Aprova a avaliação para publicação.
+    /// </summary>
+    /// <param name="moderatorId">ID do moderador que aprovou a avaliação</param>
+    /// <returns>Instância atual com aprovação aplicada</returns>
+    /// <exception cref="DomainException">Lançada se a avaliação foi deletada ou já está aprovada</exception>
+    /// <exception cref="ArgumentException">Lançada se o ID do moderador for inválido</exception>
+    public ProductReview Approve(Guid moderatorId)
+    {
+        if (DeletedAt.HasValue)
+            throw new DomainException("Não é possível aprovar uma avaliação deletada");
+
+        if (IsApproved)
+            throw new DomainException("Avaliação já foi aprovada");
+
+        if (moderatorId == Guid.Empty)
+            throw new ArgumentException("ID do moderador é obrigatório", nameof(moderatorId));
+
+        IsApproved = true;
+        ModeratedAt = DateTime.UtcNow;
+        ModeratedBy = moderatorId;
+        UpdatedAt = DateTime.UtcNow;
+        Version++;
+
+        return this;
     }
 }

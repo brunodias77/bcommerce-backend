@@ -4,7 +4,12 @@ using BuildingBlocks.CQRS.Validations;
 using CatalogService.Api.Health;
 using CatalogService.Application.Commands.Categories.CreateCategory;
 using CatalogService.Application.Commands.Categories.DeleteCategory;
+using CatalogService.Application.Commands.ProductImages.ReorderProductImages;
+using CatalogService.Application.Commands.ProductImages.SetPrimaryProductImage;
 using CatalogService.Application.Commands.Products.CreateProduct;
+using CatalogService.Application.Commands.ProductReviews.CreateProductReview;
+using CatalogService.Application.Commands.ProductReviews.DeleteProductReview;
+using CatalogService.Application.Commands.ProductReviews.UpdateProductReview;
 
 namespace CatalogService.Api.Configurations;
 
@@ -44,6 +49,11 @@ public static class ApplicationDependencyInjection
         services.AddScoped<IValidator<CreateCategoryCommand>, CreateCategoryCommandValidator>();
         services.AddScoped<IValidator<DeleteCategoryCommand>, DeleteCategoryCommandValidator>();
         services.AddScoped<IValidator<CreateProductCommand>, CreateProductCommandValidator>();
+        services.AddScoped<IValidator<ReorderProductImagesCommand>, ReorderProductImagesValidator>();
+        services.AddScoped<IValidator<SetPrimaryProductImageCommand>, SetPrimaryProductImageValidator>();
+        services.AddScoped<IValidator<CreateProductReviewCommand>, CreateProductReviewValidator>();
+        services.AddScoped<IValidator<DeleteProductReviewCommand>, DeleteProductReviewValidator>();
+        services.AddScoped<IValidator<UpdateProductReviewCommand>, UpdateProductReviewValidator>();
         
         // services.AddScoped<ILoggedUser, LoggedUser>();
         // services.AddHttpContextAccessor();
