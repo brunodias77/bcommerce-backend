@@ -294,7 +294,7 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 
 #### ⏳ SetPrimaryProductImage
 
-**Status**: ✅ Implementado    
+**Status**: ✅ Implementado  
 **Descrição**: Define uma imagem como principal  
 **Parâmetros**:
 
@@ -307,7 +307,7 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 
 #### ⏳ ReorderProductImages
 
-**Status**: ✅ Implementado   
+**Status**: ✅ Implementado  
 **Descrição**: Reordena as imagens de um produto  
 **Parâmetros**:
 
@@ -322,7 +322,7 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 
 #### ⏳ CreateProductReview
 
-**Status**:  ✅ Implementado   
+**Status**: ✅ Implementado  
 **Descrição**: Cria uma avaliação para um produto  
 **Parâmetros**:
 
@@ -348,7 +348,7 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 
 #### ⏳ DeleteProductReview
 
-**Status**: ✅ Implementado    
+**Status**: ✅ Implementado  
 **Descrição**: Remove uma avaliação  
 **Parâmetros**:
 
@@ -413,7 +413,7 @@ Este documento define todos os **Commands** (operações de escrita) e **Queries
 
 #### ⏳ AddProductToFavorites
 
-**Status**: Pendente  
+**Status**: ✅ Implementado  
 **Descrição**: Adiciona um produto aos favoritos do usuário  
 **Parâmetros**:
 

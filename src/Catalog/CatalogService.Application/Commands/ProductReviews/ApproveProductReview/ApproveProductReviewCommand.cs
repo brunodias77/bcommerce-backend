@@ -8,4 +8,3 @@ public class ApproveProductReviewCommand : ICommand<ApiResponse<bool>>
     public Guid Id { get; set; }
     public Guid ModeratorId { get; set; }
 }
-

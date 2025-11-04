@@ -7,7 +7,7 @@ public class ApiResponse<T>
 {
     public bool Success { get; }
 
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public T Data { get; }
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

@@ -338,6 +338,39 @@ public class Product : AggregateRoot
         return this;
     }
     
+    /// <summary>
+    /// Incrementa o contador de favoritos do produto
+    /// </summary>
+    /// <returns>Produto com contador atualizado</returns>
+    public Product IncrementFavoriteCount()
+    {
+        if (DeletedAt.HasValue)
+            throw new DomainException("Não é possível alterar contador de favoritos de um produto deletado");
+        
+        FavoriteCount++;
+        UpdatedAt = DateTime.UtcNow;
+        Version++;
+        
+        return this;
+    }
+    
+    /// <summary>
+    /// Decrementa o contador de favoritos do produto
+    /// </summary>
+    /// <returns>Produto com contador atualizado</returns>
+    public Product DecrementFavoriteCount()
+    {
+        if (DeletedAt.HasValue)
+            throw new DomainException("Não é possível alterar contador de favoritos de um produto deletado");
+        
+        if (FavoriteCount > 0)
+            FavoriteCount--;
+        UpdatedAt = DateTime.UtcNow;
+        Version++;
+        
+        return this;
+    }
+    
     public override ValidationHandler Validate(ValidationHandler handler)
     {
         // Validar Name

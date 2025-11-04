@@ -9,17 +9,19 @@ using CatalogService.Application.Commands.ProductImages.ReorderProductImages;
 using CatalogService.Application.Commands.Products.CreateProduct;
 using CatalogService.Application.Commands.Products.UpdateProduct;
 using CatalogService.Application.Commands.Products.DeleteProduct;
+using CatalogService.Application.Commands.Products.DeleteProductImage;
 using CatalogService.Application.Commands.Products.ActivateProduct;
 using CatalogService.Application.Commands.Products.DeactivateProduct;
 using CatalogService.Application.Commands.Products.UpdateProductStock;
 using CatalogService.Application.Commands.Products.UpdateProductPrice;
 using CatalogService.Application.Commands.Products.FeatureProduct;
 using CatalogService.Application.Commands.Products.UnfeatureProduct;
-using CatalogService.Application.Commands.Products.DeleteProductImage;
 using CatalogService.Application.Commands.ProductReviews.CreateProductReview;
 using CatalogService.Application.Commands.ProductReviews.DeleteProductReview;
 using CatalogService.Application.Commands.ProductReviews.UpdateProductReview;
+using CatalogService.Application.Commands.ProductReviews.ApproveProductReview;
 using CatalogService.Application.Commands.ProductReviews;
+using CatalogService.Application.Commands.FavoriteProducts.AddProductToFavorites;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CatalogService.Api.Controllers;
@@ -822,6 +824,100 @@ public class ProductController : ControllerBase
         var result = await _mediator.SendAsync<ApiResponse<bool>>(command, cancellationToken);
 
         _logger.LogInformation("✅ [ProductController] Operação concluída com sucesso para DeleteProductReviewCommand com ReviewId {ReviewId} e ProductId {ProductId}", reviewId, productId);
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Adiciona um produto aos favoritos do usuário
+    /// </summary>
+    /// <param name="productId">ID do produto a ser favoritado</param>
+    /// <param name="userId">ID do usuário que está favoritando</param>
+    /// <param name="cancellationToken">Token de cancelamento</param>
+    /// <returns>Confirmação da operação</returns>
+    /// <response code="200">Produto adicionado aos favoritos com sucesso</response>
+    /// <response code="400">Dados inválidos ou erro de validação</response>
+    /// <response code="404">Produto não encontrado</response>
+    /// <response code="409">Produto já está nos favoritos do usuário ou produto deletado/inativo</response>
+    /// <response code="500">Erro interno do servidor</response>
+    [HttpPost("{productId:guid}/reviews/{reviewId:guid}/approve")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> ApproveProductReview([FromRoute] Guid productId, [FromRoute] Guid reviewId, 
+        [FromBody] ApproveProductReviewCommand command, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("✅ [ProductController] Iniciando aprovação de avaliação para ApproveProductReviewCommand com ReviewId {ReviewId} e ProductId {ProductId}", reviewId, productId);
+
+        // Definir o ID da avaliação do comando a partir da rota
+        command.Id = reviewId;
+
+        // Validar ModelState
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => new Error(e.ErrorMessage))
+                .ToList();
+
+            throw new ValidationException(errors);
+        }
+
+        // Enviar command via Mediator
+        var result = await _mediator.SendAsync<ApiResponse<bool>>(command, cancellationToken);
+
+        _logger.LogInformation("✅ [ProductController] Operação concluída com sucesso para ApproveProductReviewCommand com ReviewId {ReviewId} e ProductId {ProductId}", reviewId, productId);
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Adiciona um produto aos favoritos do usuário
+    /// </summary>
+    /// <param name="productId">ID do produto a ser favoritado</param>
+    /// <param name="userId">ID do usuário que está favoritando</param>
+    /// <param name="cancellationToken">Token de cancelamento</param>
+    /// <returns>Confirmação da operação</returns>
+    /// <response code="200">Produto adicionado aos favoritos com sucesso</response>
+    /// <response code="400">Dados inválidos ou erro de validação</response>
+    /// <response code="404">Produto não encontrado</response>
+    /// <response code="409">Produto já está nos favoritos do usuário ou produto deletado/inativo</response>
+    /// <response code="500">Erro interno do servidor</response>
+    [HttpPost("{productId:guid}/favorites/{userId:guid}")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> AddProductToFavorites([FromRoute] Guid productId, [FromRoute] Guid userId, 
+        CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("❤️ [ProductController] Iniciando AddProductToFavoritesCommand para ProductId {ProductId} e UserId {UserId}", productId, userId);
+
+        // Criar command com os IDs da rota
+        var command = new AddProductToFavoritesCommand 
+        { 
+            ProductId = productId,
+            UserId = userId
+        };
+
+        // Validar ModelState
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => new Error(e.ErrorMessage))
+                .ToList();
+
+            throw new ValidationException(errors);
+        }
+
+        // Enviar command via Mediator
+        var result = await _mediator.SendAsync<ApiResponse<bool>>(command, cancellationToken);
+
+        _logger.LogInformation("✅ [ProductController] Operação concluída com sucesso para AddProductToFavoritesCommand com ProductId {ProductId} e UserId {UserId}", productId, userId);
 
         return Ok(result);
     }

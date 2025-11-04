@@ -25,27 +25,36 @@ public class ApproveProductReviewCommandHandler : ICommandHandler<ApproveProduct
 
     public async Task<ApiResponse<bool>> HandleAsync(ApproveProductReviewCommand request, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("✅ [ApproveProductReviewCommandHandler] Iniciando processamento para ApproveProductReviewCommand");
-
-        // 1. Verificar se a review existe e não foi deletada
+        _logger.LogInformation("⭐ [ApproveProductReviewCommandHandler] Iniciando processamento para ReviewId: {ReviewId}, ModeratorId: {ModeratorId}", 
+            request.Id, request.ModeratorId);
+        
+        // 1. Buscar a avaliação pelo ID
         var productReview = await _productReviewRepository.GetByIdAsync(request.Id, cancellationToken);
-        if (productReview == null || productReview.DeletedAt.HasValue)
+        if (productReview == null)
         {
-            throw new DomainException("Avaliação não encontrada ou foi removida.");
+            throw new KeyNotFoundException($"Avaliação com ID {request.Id} não foi encontrada.");
         }
 
-        // 2. Aprovar a avaliação
+        // 2. Aplicar a aprovação usando o método do domínio
+        // O método Approve já faz todas as validações necessárias:
+        // - Verifica se foi deletada
+        // - Verifica se já está aprovada
+        // - Valida o moderatorId
         productReview.Approve(request.ModeratorId);
 
-        _logger.LogInformation("📝 [ApproveProductReviewCommandHandler] ProductReview {ProductReviewId} aprovada por moderador {ModeratorId}",
-            productReview.Id, request.ModeratorId);
+        // 3. Atualizar no repositório
+        _productReviewRepository.Update(productReview);
 
-        // 3. Persistir mudanças no banco
+        _logger.LogInformation("📝 [ApproveProductReviewCommandHandler] Avaliação {ReviewId} aprovada pelo moderador {ModeratorId}", 
+            request.Id, request.ModeratorId);
+
+        // 4. Persistir mudanças (TransactionBehavior gerencia a transação automaticamente)
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("✅ [ApproveProductReviewCommandHandler] Processamento concluído com sucesso para ApproveProductReviewCommand");
-
+        // 5. Retornar resposta de sucesso
+        _logger.LogInformation("✅ [ApproveProductReviewCommandHandler] Processamento concluído com sucesso para ReviewId: {ReviewId}", 
+            request.Id);
+        
         return ApiResponse<bool>.Ok(true, "Avaliação aprovada com sucesso.");
     }
 }
-

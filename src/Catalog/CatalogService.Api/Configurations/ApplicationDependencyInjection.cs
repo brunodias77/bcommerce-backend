@@ -10,7 +10,8 @@ using CatalogService.Application.Commands.Products.CreateProduct;
 using CatalogService.Application.Commands.ProductReviews.CreateProductReview;
 using CatalogService.Application.Commands.ProductReviews.DeleteProductReview;
 using CatalogService.Application.Commands.ProductReviews.UpdateProductReview;
-using CatalogService.Application.Commands.ProductReviews.ApproveProductReview;
+
+using CatalogService.Application.Commands.FavoriteProducts.AddProductToFavorites;
 
 namespace CatalogService.Api.Configurations;
 
@@ -55,7 +56,8 @@ public static class ApplicationDependencyInjection
         services.AddScoped<IValidator<CreateProductReviewCommand>, CreateProductReviewValidator>();
         services.AddScoped<IValidator<DeleteProductReviewCommand>, DeleteProductReviewValidator>();
         services.AddScoped<IValidator<UpdateProductReviewCommand>, UpdateProductReviewValidator>();
-        services.AddScoped<IValidator<ApproveProductReviewCommand>, ApproveProductReviewValidator>();
+
+        services.AddScoped<IValidator<AddProductToFavoritesCommand>, AddProductToFavoritesCommandValidator>();
         
         // services.AddScoped<ILoggedUser, LoggedUser>();
         // services.AddHttpContextAccessor();
