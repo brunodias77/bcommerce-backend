@@ -1,8 +1,11 @@
 using System;
 using System.Text.RegularExpressions;
 using BuildingBlocks.Core.Domain;
+using BuildingBlocks.Core.Exceptions;
 using BuildingBlocks.Core.Validations;
 using CatalogService.Domain.Entities;
+using CatalogService.Domain.Enums;
+using CatalogService.Domain.Events.Products;
 using CatalogService.Domain.ValueObjects;
 
 namespace CatalogService.Domain.Aggregates;
@@ -99,6 +102,240 @@ public class Product : AggregateRoot
         };
 
 
+    }
+    
+    /// <summary>
+    /// Atualiza os dados do produto
+    /// </summary>
+    /// <param name="name">Nome do produto</param>
+    /// <param name="slug">Slug do produto</param>
+    /// <param name="price">Preço do produto</param>
+    /// <param name="stock">Estoque do produto</param>
+    /// <param name="description">Descrição do produto</param>
+    /// <param name="shortDescription">Descrição curta do produto</param>
+    /// <param name="compareAtPrice">Preço de comparação</param>
+    /// <param name="costPrice">Preço de custo</param>
+    /// <param name="lowStockThreshold">Limite de estoque baixo</param>
+    /// <param name="categoryId">ID da categoria</param>
+    /// <param name="metaTitle">Meta título para SEO</param>
+    /// <param name="metaDescription">Meta descrição para SEO</param>
+    /// <param name="weightKg">Peso em quilogramas</param>
+    /// <param name="sku">SKU do produto</param>
+    /// <param name="barcode">Código de barras</param>
+    /// <param name="isActive">Se o produto está ativo</param>
+    /// <param name="isFeatured">Se o produto é destaque</param>
+    /// <returns>Instância atualizada do produto</returns>
+    public Product Update(
+        string name,
+        string slug,
+        Money price,
+        int stock,
+        string? description = null,
+        string? shortDescription = null,
+        Money? compareAtPrice = null,
+        Money? costPrice = null,
+        int lowStockThreshold = 10,
+        Guid? categoryId = null,
+        string? metaTitle = null,
+        string? metaDescription = null,
+        decimal? weightKg = null,
+        string? sku = null,
+        string? barcode = null,
+        bool isActive = true,
+        bool isFeatured = false)
+    {
+        Name = name;
+        Slug = slug;
+        Description = description;
+        ShortDescription = shortDescription;
+        Price = price;
+        CompareAtPrice = compareAtPrice;
+        CostPrice = costPrice;
+        Stock = stock;
+        LowStockThreshold = lowStockThreshold;
+        CategoryId = categoryId;
+        MetaTitle = metaTitle;
+        MetaDescription = metaDescription;
+        WeightKg = weightKg;
+        Sku = sku;
+        Barcode = barcode;
+        IsActive = isActive;
+        IsFeatured = isFeatured;
+        UpdatedAt = DateTime.UtcNow;
+        Version++;
+        
+        return this;
+    }
+    
+    /// <summary>
+    /// Realiza o soft delete do produto
+    /// </summary>
+    /// <returns>Produto com soft delete aplicado</returns>
+    public Product SoftDelete()
+    {
+        DeletedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+        Version++;
+        
+        return this;
+    }
+    
+    /// <summary>
+    /// Ativa o produto
+    /// </summary>
+    /// <returns>Produto ativado</returns>
+    public Product Activate()
+    {
+        if (IsActive)
+            throw new DomainException("Produto já está ativo");
+            
+        if (DeletedAt.HasValue)
+            throw new DomainException("Não é possível ativar um produto deletado");
+        
+        IsActive = true;
+        UpdatedAt = DateTime.UtcNow;
+        Version++;
+        
+        // Adicionar evento de domínio
+        AddDomainEvent(new ProductActivatedEvent(Id, Name, DateTime.UtcNow));
+        
+        return this;
+    }
+    
+    /// <summary>
+    /// Desativa o produto
+    /// </summary>
+    /// <returns>Produto desativado</returns>
+    public Product Deactivate()
+    {
+        if (!IsActive)
+            throw new DomainException("Produto já está inativo");
+            
+        if (DeletedAt.HasValue)
+            throw new DomainException("Não é possível desativar um produto deletado");
+        
+        IsActive = false;
+        UpdatedAt = DateTime.UtcNow;
+        Version++;
+        
+        // Adicionar evento de domínio
+        AddDomainEvent(new ProductDeactivatedEvent(Id, Name, DateTime.UtcNow));
+        
+        return this;
+    }
+    
+    /// <summary>
+    /// Marca o produto como destaque
+    /// </summary>
+    /// <returns>Produto marcado como destaque</returns>
+    public Product Feature()
+    {
+        if (IsFeatured)
+            throw new DomainException("Produto já está marcado como destaque");
+            
+        if (DeletedAt.HasValue)
+            throw new DomainException("Não é possível marcar um produto deletado como destaque");
+        
+        IsFeatured = true;
+        UpdatedAt = DateTime.UtcNow;
+        Version++;
+        
+        // Adicionar evento de domínio
+        AddDomainEvent(new ProductFeaturedEvent(Id, Name, DateTime.UtcNow));
+        
+        return this;
+    }
+    
+    /// <summary>
+    /// Remove o produto dos destaques
+    /// </summary>
+    /// <returns>Produto removido dos destaques</returns>
+    public Product Unfeature()
+    {
+        if (!IsFeatured)
+            throw new DomainException("Produto não está marcado como destaque");
+            
+        if (DeletedAt.HasValue)
+            throw new DomainException("Não é possível alterar status de destaque de um produto deletado");
+        
+        IsFeatured = false;
+        UpdatedAt = DateTime.UtcNow;
+        Version++;
+        
+        // Adicionar evento de domínio
+        AddDomainEvent(new ProductUnfeaturedEvent(Id, Name, DateTime.UtcNow));
+        
+        return this;
+    }
+    
+    /// <summary>
+    /// Atualiza o estoque do produto
+    /// </summary>
+    /// <param name="quantity">Quantidade para a operação</param>
+    /// <param name="operation">Tipo de operação (ADD, SUBTRACT, SET)</param>
+    /// <returns>Produto com estoque atualizado</returns>
+    public Product UpdateStock(int quantity, StockOperation operation)
+    {
+        if (DeletedAt.HasValue)
+            throw new DomainException("Não é possível atualizar estoque de um produto deletado");
+        
+        if (quantity < 0)
+            throw new DomainException("Quantidade deve ser maior ou igual a zero");
+        
+        var previousStock = Stock;
+        var newStock = operation switch
+        {
+            StockOperation.ADD => Stock + quantity,
+            StockOperation.SUBTRACT => Stock - quantity,
+            StockOperation.SET => quantity,
+            _ => throw new DomainException("Operação de estoque inválida")
+        };
+        
+        if (newStock < 0)
+            throw new DomainException("Estoque não pode ser negativo");
+        
+        Stock = newStock;
+        UpdatedAt = DateTime.UtcNow;
+        Version++;
+        
+        // Adicionar evento de domínio
+        AddDomainEvent(new ProductStockUpdatedEvent(Id, Name, previousStock, newStock, operation, DateTime.UtcNow));
+        
+        return this;
+    }
+    
+    /// <summary>
+    /// Atualiza o preço do produto
+    /// </summary>
+    /// <param name="price">Novo preço do produto</param>
+    /// <param name="compareAtPrice">Preço de comparação (opcional)</param>
+    /// <returns>Produto com preço atualizado</returns>
+    public Product UpdatePrice(Money price, Money? compareAtPrice = null)
+    {
+        if (DeletedAt.HasValue)
+            throw new DomainException("Não é possível atualizar preço de um produto deletado");
+        
+        if (price == null)
+            throw new DomainException("Preço é obrigatório");
+        
+        if (price.Amount <= 0)
+            throw new DomainException("Preço deve ser maior que zero");
+        
+        if (compareAtPrice != null && compareAtPrice.Amount <= price.Amount)
+            throw new DomainException("Preço de comparação deve ser maior que o preço do produto");
+        
+        var previousPrice = Price;
+        var previousCompareAtPrice = CompareAtPrice;
+        
+        Price = price;
+        CompareAtPrice = compareAtPrice;
+        UpdatedAt = DateTime.UtcNow;
+        Version++;
+        
+        // Adicionar evento de domínio
+        AddDomainEvent(new ProductPriceUpdatedEvent(Id, Name, previousPrice, price, previousCompareAtPrice, compareAtPrice, DateTime.UtcNow));
+        
+        return this;
     }
     
     public override ValidationHandler Validate(ValidationHandler handler)

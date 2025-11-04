@@ -1,9 +1,15 @@
+using BuildingBlocks.CQRS.Behaviors;
 using BuildingBlocks.CQRS.Mediator;
 using BuildingBlocks.CQRS.Validations;
 using CatalogService.Api.Health;
 using CatalogService.Application.Commands.Categories.CreateCategory;
 using CatalogService.Application.Commands.Categories.DeleteCategory;
+using CatalogService.Application.Commands.ProductImages.ReorderProductImages;
+using CatalogService.Application.Commands.ProductImages.SetPrimaryProductImage;
 using CatalogService.Application.Commands.Products.CreateProduct;
+using CatalogService.Application.Commands.ProductReviews.CreateProductReview;
+using CatalogService.Application.Commands.ProductReviews.DeleteProductReview;
+using CatalogService.Application.Commands.ProductReviews.UpdateProductReview;
 
 namespace CatalogService.Api.Configurations;
 
@@ -20,11 +26,20 @@ public static class ApplicationDependencyInjection
 
     private static void AddMediator(this IServiceCollection services, IConfiguration configuration)
     {
-        // Registrar Mediator com assembly da Application
+        // 1. Registrar Mediator
         services.AddMediator(typeof(CreateCategoryCommandHandler).Assembly);
-        
-        // Registrar ValidationBehavior manualmente
-        services.AddScoped(typeof(BuildingBlocks.CQRS.Mediator.IPipelineBehavior<,>), typeof(BuildingBlocks.CQRS.Behaviors.ValidationBehavior<,>));
+    
+        // 2. Registrar Behaviors (ordem importa!)
+        // A execução será na ORDEM REVERSA do registro
+    
+    //    services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));      
+        // ↑ Executa PRIMEIRO (entrada e saída do pipeline)
+    
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));   
+        // ↑ Executa SEGUNDO (valida antes de abrir transação)
+    
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(TransactionBehavior<,>));  
+        // ↑ Executa TERCEIRO (envolve apenas o handler)
     }
 
 
@@ -34,6 +49,11 @@ public static class ApplicationDependencyInjection
         services.AddScoped<IValidator<CreateCategoryCommand>, CreateCategoryCommandValidator>();
         services.AddScoped<IValidator<DeleteCategoryCommand>, DeleteCategoryCommandValidator>();
         services.AddScoped<IValidator<CreateProductCommand>, CreateProductCommandValidator>();
+        services.AddScoped<IValidator<ReorderProductImagesCommand>, ReorderProductImagesValidator>();
+        services.AddScoped<IValidator<SetPrimaryProductImageCommand>, SetPrimaryProductImageValidator>();
+        services.AddScoped<IValidator<CreateProductReviewCommand>, CreateProductReviewValidator>();
+        services.AddScoped<IValidator<DeleteProductReviewCommand>, DeleteProductReviewValidator>();
+        services.AddScoped<IValidator<UpdateProductReviewCommand>, UpdateProductReviewValidator>();
         
         // services.AddScoped<ILoggedUser, LoggedUser>();
         // services.AddHttpContextAccessor();

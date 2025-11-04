@@ -1,0 +1,13 @@
+namespace CatalogService.Application.Commands.ProductImages.UpdateProductImage;
+
+public class UpdateProductImageResponse
+{
+    public Guid Id { get; set; }
+    public Guid ProductId { get; set; }
+    public string Url { get; set; } = string.Empty;
+    public string? ThumbnailUrl { get; set; }
+    public string? AltText { get; set; }
+    public int DisplayOrder { get; set; }
+    public bool IsPrimary { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}

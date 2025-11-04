@@ -39,7 +39,7 @@ public class DeleteCategoryCommandHandler : ICommandHandler<DeleteCategoryComman
         DeleteCategoryCommand request, 
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Iniciando exclusão da categoria {CategoryId}", request.Id);
+        _logger.LogInformation("➡️ [DeleteCategoryCommandHandler] Iniciando processamento para DeleteCategoryCommand");
 
         // 1. Validar o comando
         var validationResult = _validator.Validate(request);
@@ -79,38 +79,23 @@ public class DeleteCategoryCommandHandler : ICommandHandler<DeleteCategoryComman
         //     throw new DomainException("Não é possível deletar uma categoria que possui produtos associados");
         // }
 
-        // 6. Iniciar transação
-        await _unitOfWork.BeginTransactionAsync(cancellationToken);
+        // 6. Realizar o soft delete
+        existingCategory.SoftDelete();
 
-        try
-        {
-            // 7. Realizar o soft delete
-            existingCategory.SoftDelete();
+        // 7. Atualizar no repositório
+        _categoryRepository.Update(existingCategory);
 
-            // 8. Atualizar no repositório
-            _categoryRepository.Update(existingCategory);
+        // 8. Salvar as mudanças (TransactionBehavior gerencia a transação automaticamente)
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            // 9. Salvar as mudanças
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("✅ [DeleteCategoryCommandHandler] Processamento concluído com sucesso para DeleteCategoryCommand");
 
-            // 10. Confirmar a transação
-            await _unitOfWork.CommitTransactionAsync(cancellationToken);
+        // 9. Retornar a resposta
+        var response = new DeleteCategoryResponse(
+            success: true,
+            categoryId: existingCategory.Id,
+            message: "Categoria deletada com sucesso");
 
-            _logger.LogInformation("Categoria deletada com sucesso: {CategoryId}", existingCategory.Id);
-
-            // 11. Retornar a resposta
-            var response = new DeleteCategoryResponse(
-                success: true,
-                categoryId: existingCategory.Id,
-                message: "Categoria deletada com sucesso");
-
-            return ApiResponse<DeleteCategoryResponse>.Ok(response, "Categoria deletada com sucesso");
-        }
-        catch
-        {
-            // Rollback em caso de erro
-            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-            throw; // Re-lançar a exceção para o GlobalExceptionHandler
-        }
+        return ApiResponse<DeleteCategoryResponse>.Ok(response, "Categoria deletada com sucesso");
     }
 }

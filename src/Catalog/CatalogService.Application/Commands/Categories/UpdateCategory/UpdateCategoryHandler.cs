@@ -40,7 +40,7 @@ public class UpdateCategoryHandler : ICommandHandler<UpdateCategoryCommand, ApiR
         UpdateCategoryCommand request, 
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Iniciando atualização da categoria {CategoryId}", request.Id);
+        _logger.LogInformation("➡️ [UpdateCategoryHandler] Iniciando processamento para UpdateCategoryCommand");
 
         // 1. Validar o comando
         var validationResult = _validator.Validate(request);
@@ -69,61 +69,46 @@ public class UpdateCategoryHandler : ICommandHandler<UpdateCategoryCommand, ApiR
             }
         }
 
-        // 4. Iniciar transação
-        await _unitOfWork.BeginTransactionAsync(cancellationToken);
+        // 4. Atualizar a categoria
+        existingCategory.Update(
+            name: request.Name,
+            slug: request.Slug,
+            description: request.Description,
+            parentId: request.ParentId,
+            displayOrder: request.DisplayOrder,
+            isActive: request.IsActive,
+            metadata: request.Metadata);
 
-        try
+        // 5. Validar a entidade atualizada
+        var entityValidation = existingCategory.Validate(new ValidationHandler());
+        if (entityValidation.HasErrors)
         {
-            // 5. Atualizar a categoria
-            existingCategory.Update(
-                name: request.Name,
-                slug: request.Slug,
-                description: request.Description,
-                parentId: request.ParentId,
-                displayOrder: request.DisplayOrder,
-                isActive: request.IsActive,
-                metadata: request.Metadata);
-
-            // 6. Validar a entidade atualizada
-            var entityValidation = existingCategory.Validate(new ValidationHandler());
-            if (entityValidation.HasErrors)
-            {
-                throw new DomainException($"Categoria atualizada é inválida: {string.Join(", ", entityValidation.Errors)}");
-            }
-
-            // 7. Atualizar no repositório
-            _categoryRepository.Update(existingCategory);
-
-            // 8. Salvar as mudanças
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-            // 9. Confirmar a transação
-            await _unitOfWork.CommitTransactionAsync(cancellationToken);
-
-            _logger.LogInformation("Categoria atualizada com sucesso: {CategoryId}", existingCategory.Id);
-
-            // 10. Retornar a resposta
-            var response = new UpdateCategoryResponse
-            {
-                Id = existingCategory.Id,
-                Name = existingCategory.Name,
-                Slug = existingCategory.Slug,
-                Description = existingCategory.Description,
-                ParentId = existingCategory.ParentId,
-                IsActive = existingCategory.IsActive,
-                DisplayOrder = existingCategory.DisplayOrder,
-                Version = existingCategory.Version,
-                CreatedAt = existingCategory.CreatedAt,
-                UpdatedAt = existingCategory.UpdatedAt
-            };
-
-            return ApiResponse<UpdateCategoryResponse>.Ok(response, "Categoria atualizada com sucesso");
+            throw new DomainException($"Categoria atualizada é inválida: {string.Join(", ", entityValidation.Errors)}");
         }
-        catch
+
+        // 6. Atualizar no repositório
+        _categoryRepository.Update(existingCategory);
+
+        // 7. Salvar as mudanças (TransactionBehavior gerencia a transação automaticamente)
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("✅ [UpdateCategoryHandler] Processamento concluído com sucesso para UpdateCategoryCommand");
+
+        // 8. Retornar a resposta
+        var response = new UpdateCategoryResponse
         {
-            // Rollback em caso de erro
-            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-            throw; // Re-lançar a exceção para o GlobalExceptionHandler
-        }
+            Id = existingCategory.Id,
+            Name = existingCategory.Name,
+            Slug = existingCategory.Slug,
+            Description = existingCategory.Description,
+            ParentId = existingCategory.ParentId,
+            IsActive = existingCategory.IsActive,
+            DisplayOrder = existingCategory.DisplayOrder,
+            Version = existingCategory.Version,
+            CreatedAt = existingCategory.CreatedAt,
+            UpdatedAt = existingCategory.UpdatedAt
+        };
+
+        return ApiResponse<UpdateCategoryResponse>.Ok(response, "Categoria atualizada com sucesso");
     }
 }

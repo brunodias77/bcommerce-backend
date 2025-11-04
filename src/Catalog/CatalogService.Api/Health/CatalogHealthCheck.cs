@@ -34,13 +34,13 @@ public class CatalogHealthCheck : IHealthCheck
                 { "timestamp", DateTime.UtcNow }
             };
 
-            _logger.LogDebug("Catalog health check executado com sucesso");
+            _logger.LogDebug("🔍 [HealthCheck] Verificação executada com sucesso");
             
             return Task.FromResult(HealthCheckResult.Healthy("Catalog service is healthy", data));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro durante catalog health check");
+            _logger.LogError(ex, "❌ [HealthCheck] Erro durante verificação");
             
             return Task.FromResult(HealthCheckResult.Unhealthy("Catalog service is unhealthy", ex));
         }
